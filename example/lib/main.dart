@@ -103,7 +103,7 @@ class HomeScreen extends StatelessWidget {
                         "my": "data"
                       }
                     ));
-                    log('get subscriber id result');
+                    log('beacon result');
                     log(result as String);
                   })
             ),
