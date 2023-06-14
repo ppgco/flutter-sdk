@@ -58,40 +58,59 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     // TODO
   private func unregisterFromNotifications(callback: @escaping FlutterResult) {
     print("unregisterFromNotifications")
-    return callback("unregisterFromNotifications")
+    PPG.unsubscribeUser() { result in
+      switch result {
+      case .error(let error):
+          // handle error
+          print(error)
+          return callback("error")
+      case .success:
+          return callback("success")
+      }
+    }
   }
   
-  // TODO
   private func getSubscriberId(callback: @escaping FlutterResult) {
     print("getSubscriberId")
-    return callback("getSubscriberId")
+    return callback(PPG.subscriberId)
   }
 
-  // TODO
+  // TODO bardziej zlozona struktura danych
   private func sendBeacon(options: Any?, callback: @escaping FlutterResult) {
     print("sendBeacon")
-    return callback("sendBeacon")
+    let beacon = Beacon()
+    beacon.addSelector("Test_Selector", "0")
+    beacon.addTag("new_tag", "new_tag_label")
+    beacon.addTagToDelete(BeaconTag(tag: "my_old_tag", label: "my_old_tag_label"))
+    beacon.send() { result in
+      switch(result) {
+        case .error(let error):
+          print(error);
+          return callback("error")
+        case .success:
+          return callback("success")
+      }
+    }
   }
 
   private func onInitialize(options: Any?, callback: @escaping FlutterResult) {
-    print(options)
     guard let hashable = options as? [AnyHashable: Any] else {
       print("Initialize method argument should be hashable map")
-      return callback("failed");
+      return callback("error");
     }
     
     guard let projectId = hashable["projectId"] as? String else {
       print("projectId is required")
-      return callback("failed");
+      return callback("error");
     }
     
     guard let apiToken = hashable["apiToken"] as? String else {
       print("apiToken is required")
-      return callback("failed");
+      return callback("error");
     }
     
-    PPG.initializeNotifications(projectId: projectId, apiToken: apiToken)
     UNUserNotificationCenter.current().delegate = PushpushgoSdkPlugin.instance
+    PPG.initializeNotifications(projectId: projectId, apiToken: apiToken)
     
     return callback("success")
   }
@@ -99,7 +118,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
   private func onRegisterForNotifications(callback: @escaping FlutterResult) {
     guard let application = self.application else {
       print("UIApplication cannot be reached")
-      return callback("failed")
+      return callback("error")
     }
     
     PPG.registerForNotifications(application: application, handler: { result in
@@ -107,9 +126,9 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
         case .error(let error):
             // handle error
             print(error)
-            return callback("denied")
+            return callback("error")
         case .success:
-            return callback("granted")
+            return callback("success")
         }
     })
   }
@@ -118,7 +137,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     PPG.sendDeviceToken(deviceToken) { subscriberId in
       print(deviceToken)
       print(subscriberId)
-      self.channel?.invokeMethod(MethodIdentifier.onNewSubscription.rawValue, arguments: subscriberId)
+      self.channel?.invokeMethod(MethodIdentifier.onNewSubscription.rawValue, arguments: PPG.subscriberId)
     }
   }
 

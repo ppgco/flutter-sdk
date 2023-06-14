@@ -29,8 +29,9 @@ class _MyAppState extends State<MyApp> {
   Future<void> initializePpgCore() async {
     // TBD Logic
     _pushpushgo.initialize(
-      options: {"apiKey": "b63f3498-cf98-4b71-b6bd-c47abb45c650", "projectId": "64899899acc4724e338f8ad4"}, 
+      options: {"apiToken": "b63f3498-cf98-4b71-b6bd-c47abb45c650", "projectId": "64899899acc4724e338f8ad4"}, 
       onNewSubscriptionHandler: (subscriberId) {
+        log("MY SUBSCRIBER ID IS");
         log(subscriberId);
       }
     );
@@ -81,8 +82,10 @@ class HomeScreen extends StatelessWidget {
             Center(
               child: ElevatedButton(
                   child: const Text("Get subscriber id"),
-                  onPressed: () {
-                    pushpushgo.getSubscriberId();
+                  onPressed: () async {
+                    var asd = await pushpushgo.getSubscriberId();
+                    log('get syubscriber id result');
+                    log(asd as String);
                   })
             ),
             Center(

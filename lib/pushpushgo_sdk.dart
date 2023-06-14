@@ -8,22 +8,16 @@ typedef SubscriptionHandler = Function(String serializedJSON);
 
 typedef PpgOptions = Map<String, String>;
 
-enum RegisterStatus {
-  granted,
-  denied,
-  prompt,
-}
-
-enum CallStatus {
+enum ResponseStatus {
   success,
-  failed,
+  error
 }
 
 class PushpushgoSdk {
 
   String? lastSubscriptionJSON;
 
-  SubscriptionHandler _onNewSubscriptionHandler = (_) {
+  SubscriptionHandler _onNewSubscriptionHandler = (String subscriberId) {
     throw UnsupportedError("onToken handler must be declared");
   };
 
@@ -44,30 +38,30 @@ class PushpushgoSdk {
     );
   }
 
-  Future<RegisterStatus> registerForNotifications() async {
+  Future<ResponseStatus> registerForNotifications() async {
     String result = await CommonChannel.invokeMethod<String>(
           method: ChannelMethod.registerForNotifications,
         ) ??
         "undefined";
 
-    if (result == "granted") {
-      return RegisterStatus.granted;
+    if (result == "success") {
+      return ResponseStatus.success;
     }
 
-    return RegisterStatus.denied;
+    return ResponseStatus.error;
   }
 
-  Future<CallStatus> unregisterFromNotifications() async {
+  Future<ResponseStatus> unregisterFromNotifications() async {
     String result = await CommonChannel.invokeMethod<String>(
           method: ChannelMethod.unregisterFromNotifications,
         ) ??
         "undefined";
 
-    if (result == "failed") {
-      return CallStatus.failed;
+    if (result == "error") {
+      return ResponseStatus.error;
     }
 
-    return CallStatus.success;
+    return ResponseStatus.success;
   }
 
   Future<String?> getSubscriberId() async {
@@ -90,8 +84,7 @@ class PushpushgoSdk {
     dynamic arguments = call.arguments;
     
     if (method == ChannelMethod.onNewSubscription.name) {
-      lastSubscriptionJSON = arguments;
-      return _onNewSubscriptionHandler(lastSubscriptionJSON ?? "");
+      return _onNewSubscriptionHandler(arguments ?? "");
     }
 
     throw UnsupportedError("Unrecognized reply message");
