@@ -44,3 +44,10 @@ android {
         minSdkVersion 16
     }
 }
+
+dependencies {
+    implementation "com.github.ppgco.android-sdk:sdk:2.0.0"
+    implementation 'com.google.firebase:firebase-messaging-ktx:23.1.2'
+    implementation platform('com.google.firebase:firebase-bom:31.2.3')
+    implementation "com.google.guava:guava:31.1-android"
+}

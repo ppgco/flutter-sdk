@@ -87,9 +87,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
       print("cannot parse json, omit sending beacon")
       return callback("error");
     }
-  
-    print(parsedJSON)
-    
+      
     let beacon = Beacon()
     
     if let tagsRaw = parsedJSON["tags"] as? [[String: Any]] {
