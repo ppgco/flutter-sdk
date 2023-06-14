@@ -91,7 +91,9 @@ class HomeScreen extends StatelessWidget {
               child: ElevatedButton(
                   child: const Text("Send random beacon"),
                   onPressed: () {
-                    pushpushgo.sendBeacon();
+                    pushpushgo.sendBeacon({
+                      "test": true
+                    });
                   })
             ),
             Center(

@@ -43,7 +43,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     case .getSubscriberId:
         return getSubscriberId(callback: result)
     case .sendBeacon:
-        return sendBeacon(callback: result)    
+        return sendBeacon(options: call.arguments, callback: result)    
     default:
         return result(FlutterMethodNotImplemented)
     }
