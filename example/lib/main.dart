@@ -1,8 +1,9 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:flutter/services.dart';
-import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+// import 'package:ppg_core/ppg_core.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,36 +17,41 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  final _pushpushgoSdkPlugin = PushpushgoSdk();
+  // final _ppgCorePlugin = PpgCore();
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    // initializePpgCore();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      platformVersion =
-          await _pushpushgoSdkPlugin.getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
+  Future<void> initializePpgCore() async {
+    // TBD Logic
+    // _ppgCorePlugin.initialize(onToken: (tokenJSON) {
+      // Upload this token to your server backend - you need this to use our API to send push notifications to this user
+      // This is a JSON formatted string contains all necessery informations to our backend.
+    //   log(tokenJSON);
+    // });
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) return;
 
-    setState(() {
-      _platformVersion = platformVersion;
-    });
+    // _ppgCorePlugin.registerForNotifications();
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/details': (context) => const DetailScreen(),
+      },
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +61,31 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+            child: ElevatedButton(
+                child: const Text("Go to detail screen"),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const DetailScreen(),
+                    ),
+                  );
+                })),
+      ),
+    );
+  }
+}
+
+class DetailScreen extends StatelessWidget {
+  const DetailScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Plugin example app'),
         ),
+        body: const Center(child: Text("Detail screen")),
       ),
     );
   }

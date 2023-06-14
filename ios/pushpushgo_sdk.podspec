@@ -5,17 +5,19 @@
 Pod::Spec.new do |s|
   s.name             = 'pushpushgo_sdk'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.summary          = 'PushPushGo SDK'
   s.description      = <<-DESC
-A new Flutter plugin project.
+  PushPushGo SDK for Flutter (Dart)
+  Supports iOS and Android (Firebase/HMS)
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/ppgco/flutter-sdk'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'PushPushGo Developers' => 'support@pushpushgo.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.platform = :ios, '9.0'
+  s.dependency 'PPG_framework'
+  s.platform = :ios, '14.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }

@@ -6,6 +6,7 @@
 //
 
 import UserNotifications
+import PPG_framework
 
 class NotificationService: UNNotificationServiceExtension {
 
