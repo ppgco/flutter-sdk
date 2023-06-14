@@ -36,8 +36,6 @@ class _MyAppState extends State<MyApp> {
     );
 
     if (!mounted) return;
-
-    _pushpushgo.registerForNotifications();
   }
 
   @override

@@ -10,6 +10,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     case unregisterFromNotifications
     case getSubscriberId
     case onNewSubscription
+    case sendBeacon
   }
   
   private var channel: FlutterMethodChannel?
@@ -73,6 +74,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
   }
 
   private func onInitialize(options: Any?, callback: @escaping FlutterResult) {
+    print(options)
     guard let hashable = options as? [AnyHashable: Any] else {
       print("Initialize method argument should be hashable map")
       return callback("failed");
