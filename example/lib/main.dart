@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:pushpushgo_sdk/beacon.dart';
 import 'dart:async';
 
 import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
@@ -83,18 +84,27 @@ class HomeScreen extends StatelessWidget {
               child: ElevatedButton(
                   child: const Text("Get subscriber id"),
                   onPressed: () async {
-                    var asd = await pushpushgo.getSubscriberId();
-                    log('get syubscriber id result');
-                    log(asd as String);
+                    var result = await pushpushgo.getSubscriberId();
+                    log('get subscriber id result');
+                    log(result as String);
                   })
             ),
             Center(
               child: ElevatedButton(
                   child: const Text("Send random beacon"),
-                  onPressed: () {
-                    pushpushgo.sendBeacon({
-                      "test": true
-                    });
+                  onPressed: () async {
+                    var result = await pushpushgo.sendBeacon(Beacon(
+                      tags: {
+                        Tag.fromString("my:tag")
+                      },
+                      tagsToDelete: {},
+                      customId: "my_id",
+                      selectors: {
+                        "my": "data"
+                      }
+                    ));
+                    log('get subscriber id result');
+                    log(result as String);
                   })
             ),
             Center(

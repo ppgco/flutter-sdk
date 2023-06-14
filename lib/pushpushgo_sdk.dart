@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:pushpushgo_sdk/beacon.dart';
 import 'package:pushpushgo_sdk/common_channel.dart';
 import 'package:flutter/services.dart';
 
@@ -70,10 +71,10 @@ class PushpushgoSdk {
     );
   }
 
-    Future<String?> sendBeacon(Map<String, dynamic> beaconData) async {
+  Future<String?> sendBeacon(Beacon beaconData) async {
     return CommonChannel.invokeMethod<String>(
       method: ChannelMethod.sendBeacon,
-      arguments: beaconData
+      arguments: beaconData.serialize()
     );
   }
 

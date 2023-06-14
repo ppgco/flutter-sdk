@@ -44,7 +44,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     case .getSubscriberId:
         return getSubscriberId(callback: result)
     case .sendBeacon:
-        return sendBeacon(options: call.arguments, callback: result)    
+        return sendBeacon(serialized: call.arguments, callback: result)
     default:
         return result(FlutterMethodNotImplemented)
     }
@@ -75,13 +75,73 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     return callback(PPG.subscriberId)
   }
 
-  // TODO bardziej zlozona struktura danych
-  private func sendBeacon(options: Any?, callback: @escaping FlutterResult) {
+  private func sendBeacon(serialized: Any?, callback: @escaping FlutterResult) {
     print("sendBeacon")
+    
+    guard let stringValue = serialized as? String else {
+      print ("value is not a string, omit")
+      return callback("error");
+    }
+    
+    guard let parsedJSON = try? JSONSerialization.jsonObject(with: stringValue.data(using: .utf8)!) as? [String: Any] else {
+      print("cannot parse json, omit sending beacon")
+      return callback("error");
+    }
+  
+    print(parsedJSON)
+    
     let beacon = Beacon()
-    beacon.addSelector("Test_Selector", "0")
-    beacon.addTag("new_tag", "new_tag_label")
-    beacon.addTagToDelete(BeaconTag(tag: "my_old_tag", label: "my_old_tag_label"))
+    
+    if let tagsRaw = parsedJSON["tags"] as? [[String: Any]] {
+      tagsRaw.forEach({ it in
+        if let key = it["key"] as? String,
+           let value = it["value"] as? String {
+          beacon.addTag(BeaconTag(tag: value, label: key))
+        } else {
+          print("cannot parse to string key or value, omit");
+        }
+      })
+    } else {
+      print("cannot parse tags omit")
+    }
+    
+    if let tagsToDeleteRaw = parsedJSON["tagsToDelete"] as? [[String: Any]] {
+      tagsToDeleteRaw.forEach({ it in
+        if let key = it["key"] as? String,
+           let value = it["value"] as? String {
+          beacon.addTagToDelete(BeaconTag(tag: value, label: key))
+        } else {
+          print("cannot parse to string key or value, omit");
+        }
+      })
+    } else {
+      print("cannot parse tags to delete")
+    }
+    
+    if let selectorsRaw = parsedJSON["selectors"] as? [String: Any] {
+      selectorsRaw.forEach { key, value in
+          if let stringValue = value as? String {
+              beacon.addSelector(key, stringValue)
+          } else if let floatValue = value as? Float {
+              beacon.addSelector(key, floatValue)
+          } else if let dateValue = value as? Date {
+              beacon.addSelector(key, dateValue)
+          } else if let boolValue = value as? Bool {
+              beacon.addSelector(key, boolValue)
+          } else {
+              print("cannot parse to string key or value, omit")
+          }
+      }
+    } else {
+      print("cannot parse selectors")
+    }
+  
+    if let customId = parsedJSON["customId"] as? String {
+      beacon.customId = customId
+    } else {
+      print("cannot parse custom id")
+    }
+    
     beacon.send() { result in
       switch(result) {
         case .error(let error):
