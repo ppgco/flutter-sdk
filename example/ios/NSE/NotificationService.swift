@@ -15,15 +15,29 @@ class NotificationService: UNNotificationServiceExtension {
 
     override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
         self.contentHandler = contentHandler
-        bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
-        
-        if let bestAttemptContent = bestAttemptContent {
-            // Modify the notification content here...
-            bestAttemptContent.title = "\(bestAttemptContent.title) [modified]"
-            
-            contentHandler(bestAttemptContent)
+        self.bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
+
+        guard let content = bestAttemptContent else { return }
+
+        // Wait for delivery event result & image fetch before returning from extension
+        let group = DispatchGroup()
+        group.enter()
+        group.enter()
+
+        PPG.notificationDelivered(notificationRequest: request) { _ in
+            group.leave()
+        }
+
+        DispatchQueue.global().async { [weak self] in
+            self?.bestAttemptContent = PPG.modifyNotification(content)
+            group.leave()
+        }
+
+        group.notify(queue: .main) {
+            contentHandler(self.bestAttemptContent ?? content)
         }
     }
+
     
     override func serviceExtensionTimeWillExpire() {
         // Called just before the extension will be terminated by the system.

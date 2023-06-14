@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-// import 'package:ppg_core/ppg_core.dart';
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,33 +17,34 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // final _ppgCorePlugin = PpgCore();
+  final _pushpushgo = PushpushgoSdk();
 
   @override
   void initState() {
     super.initState();
-    // initializePpgCore();
+    initializePpgCore();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initializePpgCore() async {
     // TBD Logic
-    // _ppgCorePlugin.initialize(onToken: (tokenJSON) {
-      // Upload this token to your server backend - you need this to use our API to send push notifications to this user
-      // This is a JSON formatted string contains all necessery informations to our backend.
-    //   log(tokenJSON);
-    // });
+    _pushpushgo.initialize(
+      options: {"apiKey": "b63f3498-cf98-4b71-b6bd-c47abb45c650", "projectId": "64899899acc4724e338f8ad4"}, 
+      onNewSubscriptionHandler: (subscriberId) {
+        log(subscriberId);
+      }
+    );
 
     if (!mounted) return;
 
-    // _ppgCorePlugin.registerForNotifications();
+    _pushpushgo.registerForNotifications();
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => HomeScreen(pushpushgo: _pushpushgo),
         '/details': (context) => const DetailScreen(),
       },
     );
@@ -51,7 +52,13 @@ class _MyAppState extends State<MyApp> {
 }
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+
+  final PushpushgoSdk pushpushgo;
+
+  const HomeScreen({
+    super.key, 
+    required this.pushpushgo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,16 +67,49 @@ class HomeScreen extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-            child: ElevatedButton(
-                child: const Text("Go to detail screen"),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const DetailScreen(),
-                    ),
-                  );
-                })),
+        body: Column(
+          children: [
+            Center(
+              child: ElevatedButton(
+                  child: const Text("Go to detail screen"),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const DetailScreen(),
+                      ),
+                    );
+                  })
+            ),
+            Center(
+              child: ElevatedButton(
+                  child: const Text("Get subscriber id"),
+                  onPressed: () {
+                    pushpushgo.getSubscriberId();
+                  })
+            ),
+            Center(
+              child: ElevatedButton(
+                  child: const Text("Send random beacon"),
+                  onPressed: () {
+                    pushpushgo.sendBeacon();
+                  })
+            ),
+            Center(
+              child: ElevatedButton(
+                  child: const Text("Register"),
+                  onPressed: () {
+                    pushpushgo.registerForNotifications();
+                  })
+            ),
+            Center(
+              child: ElevatedButton(
+                  child: const Text("Unregister"),
+                  onPressed: () {
+                    pushpushgo.unregisterFromNotifications();
+                  })
+            ),
+          ],
+        )
       ),
     );
   }
