@@ -18,7 +18,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _pushpushgo = PushpushgoSdk();
+  
+  final _pushpushgo = PushpushgoSdk({
+    "apiToken": "b63f3498-cf98-4b71-b6bd-c47abb45c650", 
+    "projectId": "64899899acc4724e338f8ad4"
+  });
 
   @override
   void initState() {
@@ -30,7 +34,6 @@ class _MyAppState extends State<MyApp> {
   Future<void> initializePpgCore() async {
     // TBD Logic
     _pushpushgo.initialize(
-      options: {"apiToken": "b63f3498-cf98-4b71-b6bd-c47abb45c650", "projectId": "64899899acc4724e338f8ad4"}, 
       onNewSubscriptionHandler: (subscriberId) {
         log("MY SUBSCRIBER ID IS");
         log(subscriberId);

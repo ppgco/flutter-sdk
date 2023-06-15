@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:pushpushgo_sdk/beacon.dart';
 import 'package:pushpushgo_sdk/common_channel.dart';
@@ -15,6 +16,11 @@ enum ResponseStatus {
 }
 
 class PushpushgoSdk {
+  PpgOptions options;
+
+  PushpushgoSdk(
+    this.options,
+  );
 
   String? lastSubscriptionJSON;
 
@@ -23,7 +29,6 @@ class PushpushgoSdk {
   };
 
   Future<void> initialize({
-    required PpgOptions options,
     required SubscriptionHandler onNewSubscriptionHandler,
   }) {
     _onNewSubscriptionHandler = onNewSubscriptionHandler;
@@ -86,6 +91,12 @@ class PushpushgoSdk {
     
     if (method == ChannelMethod.onNewSubscription.name) {
       return _onNewSubscriptionHandler(arguments ?? "");
+    }
+
+    if (method == ChannelMethod.getCredentials.name) {
+      log("CALL GET CREDENTIALS");
+      log(options.toString());
+      return options;
     }
 
     throw UnsupportedError("Unrecognized reply message");

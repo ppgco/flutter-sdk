@@ -40,11 +40,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
         <meta-data
             android:name="com.pushpushgo.apikey"
-            android:value="b63f3498-cf98-4b71-b6bd-c47abb45c650" />
+            android:value="AAAAA" />
+
         <meta-data
             android:name="com.pushpushgo.projectId"
-            android:value="64899899acc4724e338f8ad4" />
+            android:value="BBBBB" />
+
     </application>
 </manifest>

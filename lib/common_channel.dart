@@ -27,7 +27,8 @@ enum ChannelMethod {
   unregisterFromNotifications,
   onNewSubscription,
   getSubscriberId,
-  sendBeacon
+  sendBeacon,
+  getCredentials,
 }
 
 extension ChannelMethodExtensions on ChannelMethod {
@@ -43,6 +44,8 @@ extension ChannelMethodExtensions on ChannelMethod {
         return 'onNewSubscription';
       case ChannelMethod.getSubscriberId:
         return 'getSubscriberId';
+      case ChannelMethod.getCredentials:
+        return 'getCredentials';
       case ChannelMethod.sendBeacon:
         return 'sendBeacon';
       default:

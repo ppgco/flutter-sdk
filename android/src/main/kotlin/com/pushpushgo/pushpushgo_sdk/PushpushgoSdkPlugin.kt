@@ -2,6 +2,7 @@ package com.pushpushgo.pushpushgo_sdk
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
@@ -14,6 +15,8 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.PluginRegistry
+import io.flutter.plugin.common.StandardMessageCodec
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -25,6 +28,7 @@ enum class MethodIdentifier {
   unregisterFromNotifications,
   getSubscriberId,
   sendBeacon,
+  getCredentials,
   onNewSubscription;
   companion object {
     fun create(name: String): MethodIdentifier {
@@ -38,10 +42,12 @@ enum class MethodIdentifier {
 class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel: MethodChannel
   private lateinit var context: Context
+  private lateinit var sharedPrefs: PpgSharedPrefs
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "com.pushpushgo/sdk")
     channel.setMethodCallHandler(this)
     context = flutterPluginBinding.applicationContext
+    sharedPrefs = PpgSharedPrefs()
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -53,13 +59,22 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
       MethodIdentifier.initialize -> {
         try {
           FirebaseApp.initializeApp(context.applicationContext)
+          val apiToken = call.argument<String>("apiToken") ?: throw Exception("apiToken is is required");
+          val projectId = call.argument<String>("projectId") ?: throw Exception("projectId is is required");
+
           PushPushGo.getInstance(
             application = context.applicationContext as Application,
-            apiKey = call.argument<String>("apiToken") ?: throw Exception("apiToken is is required"),
-            projectId = call.argument<String>("projectId") ?: throw Exception("projectId is is required"),
+            apiKey = apiToken,
+            projectId = projectId,
             isProduction = call.argument<Boolean>("isProduction") ?: true,
             isDebug = call.argument<Boolean>("isDebug") ?: false,
           );
+
+          sharedPrefs.setCredentials(context, mapOf(
+            "apiToken" to apiToken,
+            "projectId" to projectId
+          ))
+
           result.success("success")
         } catch(error: Exception) {
           result.error("error", error.message, error.cause)
@@ -132,6 +147,7 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
         result.success("success")
       }
       MethodIdentifier.registerForNotifications -> {
+        // TODO: Zapytaj o zgode dla api >33
         Futures.addCallback(PushPushGo.getInstance().createSubscriber(), object : FutureCallback<String> {
           override fun onSuccess(sub: String?) {
             result.success("success")
