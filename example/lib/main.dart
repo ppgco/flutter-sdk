@@ -20,8 +20,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   
   final _pushpushgo = PushpushgoSdk({
-    "apiToken": "b63f3498-cf98-4b71-b6bd-c47abb45c650", 
-    "projectId": "64899899acc4724e338f8ad4"
+    "apiToken": "my-api-key", 
+    "projectId": "my-project-id"
   });
 
   @override
