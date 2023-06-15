@@ -2,10 +2,11 @@
     package="com.pushpushgo.pushpushgo_sdk_example">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
+       
+    <!-- Moved from ${applicationName} -->
     <application
         android:label="pushpushgo_sdk_example"
-        android:name="${applicationName}"
+        android:name=".MainApplication" 
         android:icon="@mipmap/ic_launcher">
 
         <activity
@@ -40,14 +41,5 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
-        <meta-data
-            android:name="com.pushpushgo.apikey"
-            android:value="AAAAA" />
-
-        <meta-data
-            android:name="com.pushpushgo.projectId"
-            android:value="BBBBB" />
-
     </application>
 </manifest>

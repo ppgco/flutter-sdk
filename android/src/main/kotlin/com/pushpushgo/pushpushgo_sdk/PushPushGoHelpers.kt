@@ -9,12 +9,11 @@ import com.pushpushgo.sdk.PushPushGo
 class PushPushGoHelpers {
     companion object {
 
-        fun onNewIntent(application: Application, intent: Intent) {
-            Log.d("AAA", "ON NEW INTENT FROM DELEGATE")
+        fun initialize(application: Application): Boolean {
             val prefs = PpgSharedPrefs()
             val creds = prefs.getCredentials(application.applicationContext);
+
             if (creds["apiToken"] != "" && creds["projectId"] != "") {
-                Log.d("CREDENTIALS", creds.toString())
                 PushPushGo.getInstance(
                     application = application,
                     apiKey = if (creds["apiToken"] is String) creds["apiToken"] as String else throw Exception("apiToken is is required"),
@@ -22,25 +21,22 @@ class PushPushGoHelpers {
                     isProduction = true,
                     isDebug = false
                 )
+
+                return true
+            }
+
+            return false
+        }
+
+        fun onNewIntent(application: Application, intent: Intent) {
+            if (PushPushGoHelpers.initialize(application)) {
                 PushPushGo.getInstance().handleBackgroundNotificationClick(intent);
             }
         }
 
         fun onCreate(application: Application, intent: Intent?, savedInstanceState: Bundle?) {
             if (savedInstanceState == null) {
-                Log.d("AAA", "ON CREATE FROM DELEGATE")
-                val prefs = PpgSharedPrefs()
-                val creds = prefs.getCredentials(application.applicationContext);
-
-                if (creds["apiToken"] != "" && creds["projectId"] != "") {
-                    Log.d("CREDENTIALS", creds.toString())
-                    PushPushGo.getInstance(
-                        application = application,
-                        apiKey = if (creds["apiToken"] is String) creds["apiToken"] as String else throw Exception("apiToken is is required"),
-                        projectId = if (creds["projectId"] is String) creds["projectId"] as String else throw Exception("projectId is is required"),
-                        isProduction = true,
-                        isDebug = false
-                    )
+                if (PushPushGoHelpers.initialize(application)) {
                     PushPushGo.getInstance().handleBackgroundNotificationClick(intent);
                 }
             }

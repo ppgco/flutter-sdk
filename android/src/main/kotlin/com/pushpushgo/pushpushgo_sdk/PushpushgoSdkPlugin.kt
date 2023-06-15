@@ -2,7 +2,6 @@ package com.pushpushgo.pushpushgo_sdk
 
 import android.app.Application
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
@@ -15,8 +14,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry
-import io.flutter.plugin.common.StandardMessageCodec
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -84,8 +81,6 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
         result.success(PushPushGo.getInstance().getSubscriberId())
       }
       MethodIdentifier.sendBeacon -> {
-        Log.d("ARGUMENTS", "${call.arguments}")
-
           val stringValue = call.arguments as? String
           if (stringValue == null) {
             Log.w("PpgBeaconTranslate", "value is not a string, omit")
@@ -147,7 +142,6 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
         result.success("success")
       }
       MethodIdentifier.registerForNotifications -> {
-        // TODO: Zapytaj o zgode dla api >33
         Futures.addCallback(PushPushGo.getInstance().createSubscriber(), object : FutureCallback<String> {
           override fun onSuccess(sub: String?) {
             result.success("success")
