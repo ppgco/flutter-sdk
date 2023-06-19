@@ -1,7 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.pushpushgo.pushpushgo_sdk_example">
-
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
        
     <!-- Moved from ${applicationName} -->
     <application

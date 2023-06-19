@@ -27,11 +27,11 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initializePpgCore();
+    initialize();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initializePpgCore() async {
+  Future<void> initialize() async {
     // TBD Logic
     _pushpushgo.initialize(
       onNewSubscriptionHandler: (subscriberId) {
