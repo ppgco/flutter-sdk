@@ -8,3 +8,6 @@ Fix beacons (tags, selectors) passing to server
 ## 0.0.3
 Add readme md with instructions
 Cleanup example code
+
+## 0.0.4
+Change link to repository in to pubspec

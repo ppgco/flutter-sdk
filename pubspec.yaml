@@ -1,7 +1,7 @@
 name: pushpushgo_sdk
 description: PushPushGo Core SDK for Flutter (Dart)
-version: 0.0.3
-repository: https://github.com/ppgco/ppg-core-flutter-sdk
+version: 0.0.4
+repository: https://github.com/ppgco/flutter-sdk
 
 environment:
   sdk: '>=2.19.6 <3.0.0'
