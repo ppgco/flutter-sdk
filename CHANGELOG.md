@@ -11,3 +11,6 @@ Cleanup example code
 
 ## 0.0.4
 Change link to repository in to pubspec
+
+## 0.0.5
+Change description in pubspec
