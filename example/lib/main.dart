@@ -98,7 +98,13 @@ class HomeScreen extends StatelessWidget {
                   onPressed: () async {
                     var result = await pushpushgo.sendBeacon(Beacon(
                       tags: {
-                        Tag.fromString("my:tag")
+                        Tag.fromString("my:tag"),
+                        Tag(
+                          key: "myaa",
+                          value: "aaaa",
+                          strategy: "append",
+                          ttl: 1000
+                        )
                       },
                       tagsToDelete: {},
                       customId: "my_id",

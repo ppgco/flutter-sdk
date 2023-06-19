@@ -14,6 +14,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -96,40 +97,45 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
 
           val beacon = PushPushGo.getInstance().createBeacon()
 
-          val tagsRaw = parsedJSON["tags"] as? List<Map<String, Any>>
-          tagsRaw?.forEach { it ->
+          val tagsRaw = parsedJSON.optJSONArray("tags") ?: JSONArray();
+          for (i in 0 until tagsRaw.length()) {
+            val it = tagsRaw.optJSONObject(i)
             val key = it["key"] as? String
             val value = it["value"] as? String
+            val strategy = it["strategy"] ?: ""
+            val ttl = it["ttl"] ?: 0
+
             if (key != null && value != null) {
-              beacon.appendTag(value, key)
+              beacon.appendTag(value, key, strategy as String, ttl as Int)
             } else {
               Log.w("PpgBeaconTranslate", "cannot parse to string key or value, omit")
             }
-          } ?: Log.w("PpgBeaconTranslate", "cannot parse tags, omit")
+          }
 
-          val tagsToDeleteRaw = parsedJSON["tagsToDelete"] as? List<Map<String, Any>>
-          tagsToDeleteRaw?.forEach { it ->
+          val tagsToDeleteRaw = parsedJSON.optJSONArray("tagsToDelete") ?: JSONArray();
+
+          for (i in 0 until tagsToDeleteRaw.length()) {
+            val it = tagsToDeleteRaw.optJSONObject(i)
             val key = it["key"] as? String
             val value = it["value"] as? String
-            if (key != null || value != null) {
-              if (value == null && key !== null) {
-                beacon.removeTag(key)
-              } else {
-                beacon.removeTag("${key}:${value}")
-              }
-            } else {
-              Log.w("PpgBeaconTranslate", "cannot parse to string key or value, omit")
-            }
-          } ?: Log.w("PpgBeaconTranslate", "cannot parse tags to delete")
 
-          val selectorsRaw = parsedJSON["selectors"] as? Map<*, *>
-          if (selectorsRaw != null) {
-            for ((key, value) in selectorsRaw) {
+            if (value == null && key != null) {
+              beacon.removeTag(key)
+            } else {
+              beacon.removeTag("${key}:${value}")
+            }
+          }
+
+          val selectorsRaw = parsedJSON.optJSONObject("selectors")
+
+          selectorsRaw?.let { selectors ->
+            val keys = selectors.keys()
+            while (keys.hasNext()) {
+              val key = keys.next()
+              val value = selectors.optString(key)
               beacon.set(key as String, value ?: "")
             }
-          } else {
-            Log.w("PpgBeaconTranslate", "cannot parse selectors")
-          }
+          } ?: Log.w("PpgBeaconTranslate", "cannot parse selectors")
 
           val customId = parsedJSON["customId"] as? String
           customId?.let { beacon.setCustomId(it) } ?: Log.w("PpgBeaconTranslate", "cannot parse custom id")
