@@ -1,6 +1,6 @@
 PODS:
   - Flutter (1.0.0)
-  - PPG_framework (1.1.0)
+  - PPG_framework (1.2.0)
   - pushpushgo_sdk (0.0.1):
     - Flutter
     - PPG_framework
@@ -20,12 +20,12 @@ EXTERNAL SOURCES:
 
 CHECKOUT OPTIONS:
   PPG_framework:
-    :commit: 45c622217bac8d625fc33eea8ee0567ab3f51b5f
+    :commit: e2a17d3f71edf8d5cc6b93375828b5a47898b4a1
     :git: https://github.com/ppgco/ios-sdk.git
 
 SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  PPG_framework: a9c8d915e1c966df306e5a051c960c01a450d445
+  PPG_framework: 8fb3b0bf101b73d38518fe41d3cb95d52a1dd53a
   pushpushgo_sdk: abc573c469e675276e8915b896b0c8bc2945a017
 
 PODFILE CHECKSUM: 92c832b98dba4d899c78f2bc1ba87e772c4c9411

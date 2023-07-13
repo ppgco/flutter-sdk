@@ -14,3 +14,7 @@ Change link to repository in to pubspec
 
 ## 0.0.5
 Change description in pubspec
+
+## 0.0.6
+iOS now support strategy and ttl in tags
+ios-sdk set to 1.2.0

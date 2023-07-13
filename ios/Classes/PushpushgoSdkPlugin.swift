@@ -75,6 +75,14 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     return callback(PPG.subscriberId)
   }
 
+  private func createBeaconTagStrategy(_ strategy: String?) -> BeaconTagStrategy {
+      guard let rawValue = strategy else {
+          return .append
+      }
+
+      return BeaconTagStrategy(rawValue: rawValue) ?? .append
+  }
+
   private func sendBeacon(serialized: Any?, callback: @escaping FlutterResult) {
     print("sendBeacon")
     
@@ -93,8 +101,10 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     if let tagsRaw = parsedJSON["tags"] as? [[String: Any]] {
       tagsRaw.forEach({ it in
         if let key = it["key"] as? String,
-           let value = it["value"] as? String {
-          beacon.addTag(BeaconTag(tag: value, label: key))
+           let value = it["value"] as? String,
+           let strategy = it["strategy"] as? String,
+           let ttl = it["ttl"] as? Int64 {
+            beacon.addTag(BeaconTag(tag: value, label: key, strategy: createBeaconTagStrategy(strategy), ttl: ttl ?? 0))
         } else {
           print("cannot parse to string key or value, omit");
         }
