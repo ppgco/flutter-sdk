@@ -18,3 +18,7 @@ Change description in pubspec
 ## 0.0.6
 iOS now support strategy and ttl in tags
 ios-sdk set to 1.2.0
+
+## 0.0.7
+Update android-sdk to 2.0.2 version
+Fix issue with "crashing app" on initial run
