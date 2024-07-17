@@ -22,3 +22,7 @@ ios-sdk set to 1.2.0
 ## 0.0.7
 Update android-sdk to 2.0.2 version
 Fix issue with "crashing app" on initial run
+
+## 0.0.8
+Update android-sdk to 2.0.4 version
+Fix issue with "crashing app" on background push message incoming

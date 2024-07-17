@@ -332,7 +332,7 @@ Add minSdkVersion in defaultConfig for android:
 // build.gradle (:app)
 dependencies {  
     ...  
-    implementation "com.github.ppgco.android-sdk:sdk:2.0.2"
+    implementation "com.github.ppgco.android-sdk:sdk:2.0.4"
     implementation platform('com.google.firebase:firebase-bom:31.0.1')
     implementation 'com.google.firebase:firebase-messaging'
 }
@@ -348,7 +348,7 @@ apply plugin: 'com.google.gms.google-services'
 ```groovy
 dependencies {
   ...
-    implementation "com.github.ppgco.android-sdk:sdk:2.0.2"
+    implementation "com.github.ppgco.android-sdk:sdk:2.0.4"
     implementation 'com.huawei.agconnect:agconnect-core:1.7.0.300'
     implementation 'com.huawei.hms:push:6.5.0.300'  
 }
