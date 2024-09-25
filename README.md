@@ -8,8 +8,13 @@ Official PushPushGo SDK client for Flutter apps (iOS, Android)
  - iOS
  - Android
 
-## Requirements:
-Account in PushPushGo with configured Android(FCM/HMS) or iOS environment
+## Requirements
+- PPG project
+- Access to Firebase Console
+- Access to Apple Developers console
+- For iOS - cocoapods (or other package manager)
+
+**Approximate time of integration (without further implementation): 2-3h**
 
 ## Environment setup
 Make sure that you have flutter installed, and `flutter doctor` command pass.
@@ -26,74 +31,43 @@ If pass without any exceptions you are ready to go through next steps
 $ flutter pub add pushpushgo_sdk
 ```
 
+In your Flutter project root folder run:
+```bash
+$ flutter pub get
+```
+
 ## 1.2 Add code to your `main.dart` file
 ### 1.2.1 Import library
 ```dart
 import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
 ```
 
-### 1.2.1 Initialize client and run
+### 1.2.1 Initialize client
 
-#### Declare and initialize Initialize
+#### Declare and initialize PPG client in your main application class
 ```dart
     final _pushpushgo = PushpushgoSdk({
         "apiToken": "my-api-key-from-pushpushgo-app", 
         "projectId": "my-project-id-from-pushpushgo-app"
     });
-```
-
-Then initialize client on app start
-
-```dart
-    // In your app state
-    // Pass callback when user subscribe for notifications
+    
     _pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
       log(subscriberId);
     });
 ```
 
-#### Available methods to use with this SDK
+**Note: If you want to see example of integration on tet app visit: https://github.com/ppgco/flutter-example-integration **
 
-```dart
-    // Subscribe for notifications
-    _pushpushgo.registerForNotifications();
-
-    // Unsubscribe from notitfications
-    _pushpushgo.unregisterFromNotifications();
-
-    // Get subscriber id
-    _pushpushgo.getSubscriberId();
-
-    // Send beacons for subscriber
-    _pushpushgo.sendBeacon(
-        Beacon(
-            tags: {
-                Tag.fromString("my:tag"),
-                Tag(
-                    key: "myaa",
-                    value: "aaaa",
-                    strategy: "append",
-                    ttl: 1000)
-            },
-            tagsToDelete: {},
-            customId: "my_id",
-            selectors: {"my": "data"}
-        )
-    );
-```
 
 # 2. iOS Support
-## 2.1 Specify platform in your podfile in `ios/` directory
-```pod
-platform :ios, '14.0'
-```
+## 2.1 In Xcode open Podfile in /ios/ folder
 
 Add to `target 'Runner' do` on the end of declaration:
-
 ```pod
   pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git'
 ```
 
+After that in terminal navigate to yourFlutterProject/ios/ and run command:
 ```bash
 $ pod install
 ```
@@ -117,73 +91,109 @@ $ xed ios/
 3. Finish process and on prompt about __Activate “NSE” scheme?__ click **Cancel**
 4. Open file NotificationService.swift
 5. Paste this code:
-```swift
-import UserNotifications
-import PPG_framework
+    ```swift
+    import UserNotifications
+    import PPG_framework
 
-class NotificationService: UNNotificationServiceExtension {
+    class NotificationService: UNNotificationServiceExtension {
 
-    var contentHandler: ((UNNotificationContent) -> Void)?
-    var bestAttemptContent: UNMutableNotificationContent?
+        var contentHandler: ((UNNotificationContent) -> Void)?
+        var bestAttemptContent: UNMutableNotificationContent?
 
-    override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
-        self.contentHandler = contentHandler
-        self.bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
+        override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+            self.contentHandler = contentHandler
+            self.bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
 
-        guard let content = bestAttemptContent else { return }
+            guard let content = bestAttemptContent else { return }
 
-        // Wait for delivery event result & image fetch before returning from extension
-        let group = DispatchGroup()
-        group.enter()
-        group.enter()
+            // Wait for delivery event result & image fetch before returning from extension
+            let group = DispatchGroup()
+            group.enter()
+            group.enter()
 
-        PPG.notificationDelivered(notificationRequest: request) { _ in
-            group.leave()
+            PPG.notificationDelivered(notificationRequest: request) { _ in
+                group.leave()
+            }
+
+            DispatchQueue.global().async { [weak self] in
+                self?.bestAttemptContent = PPG.modifyNotification(content)
+                group.leave()
+            }
+
+            group.notify(queue: .main) {
+                contentHandler(self.bestAttemptContent ?? content)
+            }
         }
 
-        DispatchQueue.global().async { [weak self] in
-            self?.bestAttemptContent = PPG.modifyNotification(content)
-            group.leave()
+        override func serviceExtensionTimeWillExpire() {
+            // Called just before the extension will be terminated by the system.
+            // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push payload will be used.
+            if let contentHandler = contentHandler, let bestAttemptContent =  bestAttemptContent {
+                contentHandler(bestAttemptContent)
+            }
         }
 
-        group.notify(queue: .main) {
-            contentHandler(self.bestAttemptContent ?? content)
-        }
     }
+    ```
+6. Add NotificationServiceExtension target to `Podfile`:
+    ```pod
+    // Use name of file you created - in our case 'NSE'
+    target 'NSE' do
+      use_frameworks!
+      use_modular_headers!
+      pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git'
+    end
+    ```
 
-    override func serviceExtensionTimeWillExpire() {
-        // Called just before the extension will be terminated by the system.
-        // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push payload will be used.
-        if let contentHandler = contentHandler, let bestAttemptContent =  bestAttemptContent {
-            contentHandler(bestAttemptContent)
-        }
-    }
+7. And again navigate to yourFlutterProject/ios/ in terminal and run command:
+    ```bash
+    $ pod install
+    ```
 
-}
-```
-6. Add to previously used name **NSE** target to `Podfile`:
-```pod
-target 'NSE' do
-  use_frameworks!
-  use_modular_headers!
-  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git'
-end
-```
+8. (optional) In `Info.plist` add folowing to enable deep linking in flutter
+    ```xml
+    <key>FlutterDeepLinkingEnabled</key>
+    <true/>
+    ```
+    
+## 2.3 Prepare certificates
 
-7. (optional) In `Info.plist` add folowing to enable deep linking in flutter
-```xml
-<key>FlutterDeepLinkingEnabled</key>
-<true/>
-```
-
-## 2.3 Try to run app and fetch Push Notifications token in debug console
-```bash
-$ flutter run
-```
+ 1. Go to [Apple Developer Portal - Identities](https://developer.apple.com/account/resources/identifiers/list) and go to **Identifiers** section
+ 2. Select from list your appBundleId like `com.example.your_project_name`
+ 3. Look for PushNotifications and click "**Configure**" button
+ 4. Select your __Certificate Singing Request__ file
+ 5. Download Certificates and open in KeyChain Access (double click in macos)
+ 6. Find this certificate in list select then in context menu (right click) select export and export to .p12 format file with password.
+ 7. Login into app and add this `Certificate.p12` file with password via UI (https://next.pushpushgo.com/projects/YourProjectID/settings/integration/fcm)
+ 
+ For manual certificate generation visit our tutorial - https://docs.pushpushgo.company/application/providers/mobile-push/apns
 
 # 3. Android Support
 
-## 3.1 Add to your root build.gradle jitpack if you don't have already
+## 3.1 Firebase CLI
+1. Install Firebase CLI - open terminal and run command:
+    ```bash
+    $ curl -sL https://firebase.tools | bash
+    ```
+2. Install FlutterFire CLI - open terminal and run command:
+    ```bash
+   $ dart pub global activate flutterfire_cli
+    ```
+3. In terminal login to firebase:
+    ```bash
+   $ firebase login
+    ```
+4. Navigate to root of your Flutter project and run:
+    ```bash
+   $ flutterfire configure --project=your-firebase-project-id
+    ```
+   Follow instructions provided in terminal.
+
+   Note: If you cant use flutterfire command, add **export PATH="$PATH":"$HOME/.pub-cache/bin"** to your .zshrc file.
+
+## 3.2 Add code to your root build.gradle (/android/build.gradle)
+
+Add jitpack and huawei repo
 ```groovy
 // build.gradle (root) or settings.gradle (dependencyResolutionManagement)
 allprojects {
@@ -196,20 +206,25 @@ allprojects {
 }
 ```
 
-### 3.1.1 Add classpath dependencies in root build.gradle file:
-
-If you have already configured fcm - omit this step
-
-#### 3.1.1.1 For FCM:
-```
-classpath 'com.google.gms:google-services:4.3.15'
-```
-#### 3.1.1.2 For HMS:
-```
-classpath 'com.huawei.agconnect:agcp:1.6.0.300'
+For HMS add:
+```groovy
+dependencies {
+    classpath 'com.huawei.agconnect:agcp:1.6.0.300'
+}
 ```
 
-## 3.2 Place your `google-services.json` file in `android/app` directory
+**WARNING: If you will face packagename errors from pushpushgo_sdk add this code:**
+```groovy
+subprojects { subproject ->
+    if (subproject.name == "pushpushgo_sdk") {
+        subproject.afterEvaluate {
+            subproject.android {
+                namespace 'com.pushpushgo.pushpushgo_sdk'
+            }
+        }
+    }
+}
+```
 
 ## 3.3 Add to your `AndroidManifest.xml`
 
@@ -255,7 +270,7 @@ Optional if you need deeplinkin add:
     <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
 ```
 
-### 3.3.3 Add logic to your `MainActivity`
+## 3.4 Add logic to your `MainActivity`
 
 ```kotlin
 import android.Manifest
@@ -302,48 +317,30 @@ class MainActivity: FlutterActivity() {
 }
 ```
 
-## 3.4 Modify build.gradle and local.properties:
+## 3.4 Modify build.gradle:
 
-### 3.4.1 Add to `android/app/local.properties`:
-```groovy
-flutter.minSdkVersion=21
-```
+Add dependencies in build.gradle (app level)
 
-### 3.4.2 Add to `android/app/build.gradle`:
-```groovy
-def flutterMinSdkVersion = localProperties.getProperty('flutter.minSdkVersion')
-if (flutterMinSdkVersion == null) {
-    flutterMinSdkVersion = 21
-}
-```
-
-### 3.4.3 Modify default config
-Add minSdkVersion in defaultConfig for android:
-```groovy
-    defaultConfig {
-        minSdkVersion flutterMinSdkVersion
-    }
-```
-
-### 3.4.5 Add dependencies (app level) and apply plugin
-
-#### 3.4.5.1 For FCM
+### 3.4.1 For FCM
 ```groovy
 // build.gradle (:app)
 dependencies {  
     ...  
     implementation "com.github.ppgco.android-sdk:sdk:2.0.6"
-    implementation platform('com.google.firebase:firebase-bom:31.0.1')
+    implementation platform('com.google.firebase:firebase-bom:33.3.0')
     implementation 'com.google.firebase:firebase-messaging'
 }
 ```
 
-On top add **apply plugin**
+On top add gms plugin:
 ```groovy
-apply plugin: 'com.google.gms.google-services'
+plugins {
+    ...
+    id "com.google.gms.google-services"
+}
 ```
 
-#### 3.4.5.2 For HMS
+### 3.4.2 For HMS
 
 ```groovy
 dependencies {
@@ -354,31 +351,49 @@ dependencies {
 }
 ```
 
-On top add **apply plugin**
+On top add:
 Paste this below `com.android.library`
 ```groovy
-apply plugin: 'com.huawei.agconnect'
+    id 'com.huawei.agconnect'
 ```
 
-## 3.4 Try to run app and fetch Push Notifications token in debug console
-```bash
-$ flutter run
+## 3.5 Generate FCM v1 credentials and upload it in PPG APP:
+   * Go to your Firebase console and navigate to project settings
+   * Open Cloud Messaging tab
+   * Click Manage Service Accounts
+   * Click on your service account email
+   * Navigate to KEYS tab
+   * Click ADD KEY
+   * Click CREATE NEW KEY
+   * Pick JSON type and click create
+   * Download file and upload it in PushPushGo Application (https://next.pushpushgo.com/projects/YourProjectID/settings/integration/fcm)
+
+# Available methods to use with this SDK
+
+```dart
+    // Subscribe for notifications
+    _pushpushgo.registerForNotifications();
+
+    // Unsubscribe from notitfications
+    _pushpushgo.unregisterFromNotifications();
+
+    // Get subscriber id
+    _pushpushgo.getSubscriberId();
+
+    // Send beacons for subscriber
+    _pushpushgo.sendBeacon(
+        Beacon(
+            tags: {
+                Tag.fromString("my:tag"),
+                Tag(
+                    key: "myaa",
+                    value: "aaaa",
+                    strategy: "append",
+                    ttl: 1000)
+            },
+            tagsToDelete: {},
+            customId: "my_id",
+            selectors: {"my": "data"}
+        )
+    );
 ```
-
-# Configure PushPushGo Providers
-
-## 1. iOS
-### 1.1. Prepare certificates
- 1. Go to [Apple Developer Portal - Identities](https://developer.apple.com/account/resources/identifiers/list) and go to **Identifiers** section
- 2. Select from list your appBundleId like `com.example.your_project_name`
- 3. Look for PushNotifications and click "**Configure**" button
- 4. Select your __Certificate Singing Request__ file
- 5. Download Certificates and open in KeyChain Access (double click in macos)
- 6. Find this certificate in list select then in context menu (right click) select export and export to .p12 format file with password.
- 7. Login into app and add this `Certificate.p12` file with password via UI
-
-## 2. Android FCM
-  1. Go to [Firebase Developer Console](https://console.firebase.google.com/)
-  2. Select your project and go to **Settings**
-  3. On **Cloud Messaging** get data from section **Cloud Messaging API (Legacy)** (turn on if is disabled)
-  4. Login into app and add this `sender_id` and `authorization key` data via UI
