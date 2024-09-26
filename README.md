@@ -41,12 +41,12 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
 
 #### Declare and initialize PPG client in your main application class
 ```dart
-    final _pushpushgo = PushpushgoSdk({
+    final pushpushgo = PushpushgoSdk({
         "apiToken": "my-api-key-from-pushpushgo-app", 
         "projectId": "my-project-id-from-pushpushgo-app"
     });
     
-    _pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
+    pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
       log(subscriberId);
     });
 ```
@@ -134,8 +134,8 @@ $ xed ios/
     }
     ```
 6. Add NotificationServiceExtension target to `Podfile`:
+   Use name of file you created - in our case 'NSE'
     ```pod
-    // Use name of file you created - in our case 'NSE'
     target 'NSE' do
       use_frameworks!
       use_modular_headers!
@@ -143,12 +143,12 @@ $ xed ios/
     end
     ```
 
-7. And again navigate to yourFlutterProject/ios/ in terminal and run command:
+8. And again navigate to yourFlutterProject/ios/ in terminal and run command:
     ```bash
     $ pod install
     ```
 
-8. (optional) In `Info.plist` add folowing to enable deep linking in flutter
+9. (optional) In `Info.plist` add folowing to enable deep linking in flutter
     ```xml
     <key>FlutterDeepLinkingEnabled</key>
     <true/>
