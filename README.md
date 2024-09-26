@@ -56,7 +56,7 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
     });
 ```
 
-**Note: If you want to see example of integration on tet app visit:** https://github.com/ppgco/flutter-example-integration
+**Note: If you want to see example of integration on test app visit:** https://github.com/ppgco/flutter-example-integration
 
 
 # 2. iOS Support
