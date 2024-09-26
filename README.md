@@ -12,7 +12,7 @@ Official PushPushGo SDK client for Flutter apps (iOS, Android)
 - PPG project
 - Access to Firebase Console
 - Access to Apple Developers console
-- For iOS - cocoapods (or other package manager)
+- For iOS - Cocoapods (or other package manager)
 
 **Approximate time of integration (without further implementation): 2-3h**
 
@@ -29,11 +29,6 @@ If pass without any exceptions you are ready to go through next steps
 ## 1.1 Install flutter package
 ```bash
 $ flutter pub add pushpushgo_sdk
-```
-
-In your Flutter project root folder run:
-```bash
-$ flutter pub get
 ```
 
 ## 1.2 Add code to your `main.dart` file
@@ -61,6 +56,7 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
 
 # 2. iOS Support
 ## 2.1 In Xcode open Podfile in /ios/ folder
+**Next steps are performed using Cocoapods package manager**
 
 Add to `target 'Runner' do` on the end of declaration:
 ```pod
