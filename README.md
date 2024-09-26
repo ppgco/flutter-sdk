@@ -51,6 +51,8 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
     });
 ```
 
+Then fill apiToken and projectId by your credentials from PPG project.
+
 **Note: If you want to see example of integration on test app visit:** https://github.com/ppgco/flutter-example-integration
 
 
