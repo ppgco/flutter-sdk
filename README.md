@@ -57,6 +57,7 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
 # 2. iOS Support
 ## 2.1 In Xcode open Podfile in /ios/ folder
 **Next steps are performed using Cocoapods package manager**
+**Make sure your minimum deployment platform version is at lest 14.0**
 
 Add to `target 'Runner' do` on the end of declaration:
 ```pod
