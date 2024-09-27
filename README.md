@@ -332,14 +332,6 @@ dependencies {
 }
 ```
 
-On top add gms plugin:
-```groovy
-plugins {
-    ...
-    id "com.google.gms.google-services"
-}
-```
-
 ### 3.4.2 For HMS
 
 ```groovy
