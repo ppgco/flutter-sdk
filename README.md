@@ -84,6 +84,7 @@ $ xed ios/
 4. On **Background Modes** select items:
  - Remote notifications
  - Background fetch
+ - AppGroups
 
 ### 2.2.2 Add NotificationServiceExtension
 1. Go to file -> New -> Target
@@ -110,6 +111,9 @@ $ xed ios/
             let group = DispatchGroup()
             group.enter()
             group.enter()
+
+            // Fill your app group id
+            SharedData.shared.appGroupId = "YOUR APP GROUP ID" 
 
             PPG.notificationDelivered(notificationRequest: request) { _ in
                 group.leave()
