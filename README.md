@@ -12,7 +12,7 @@ Official PushPushGo SDK client for Flutter apps (iOS, Android)
 - PPG project
 - Access to Firebase Console
 - Access to Apple Developers console
-- For iOS - cocoapods (or other package manager)
+- For iOS - Cocoapods (or other package manager)
 
 **Approximate time of integration (without further implementation): 2-3h**
 
@@ -31,11 +31,6 @@ If pass without any exceptions you are ready to go through next steps
 $ flutter pub add pushpushgo_sdk
 ```
 
-In your Flutter project root folder run:
-```bash
-$ flutter pub get
-```
-
 ## 1.2 Add code to your `main.dart` file
 ### 1.2.1 Import library
 ```dart
@@ -46,21 +41,26 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
 
 #### Declare and initialize PPG client in your main application class
 ```dart
-    final _pushpushgo = PushpushgoSdk({
+    final pushpushgo = PushpushgoSdk({
         "apiToken": "my-api-key-from-pushpushgo-app", 
         "projectId": "my-project-id-from-pushpushgo-app"
     });
     
-    _pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
+    pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
       log(subscriberId);
     });
 ```
 
-**Note: If you want to see example of integration on tet app visit: https://github.com/ppgco/flutter-example-integration **
+Then fill apiToken and projectId by your credentials from PPG project.
+
+**Note: If you want to see example of integration on test app visit:** https://github.com/ppgco/flutter-example-integration
 
 
 # 2. iOS Support
 ## 2.1 In Xcode open Podfile in /ios/ folder
+**Next steps are performed using Cocoapods package manager.**
+
+**Make sure your minimum deployment platform version is at lest 14.0**
 
 Add to `target 'Runner' do` on the end of declaration:
 ```pod
@@ -136,8 +136,8 @@ $ xed ios/
     }
     ```
 6. Add NotificationServiceExtension target to `Podfile`:
+   Use name of file you created - in our case 'NSE'
     ```pod
-    // Use name of file you created - in our case 'NSE'
     target 'NSE' do
       use_frameworks!
       use_modular_headers!
@@ -145,12 +145,12 @@ $ xed ios/
     end
     ```
 
-7. And again navigate to yourFlutterProject/ios/ in terminal and run command:
+8. And again navigate to yourFlutterProject/ios/ in terminal and run command:
     ```bash
     $ pod install
     ```
 
-8. (optional) In `Info.plist` add folowing to enable deep linking in flutter
+9. (optional) In `Info.plist` add folowing to enable deep linking in flutter
     ```xml
     <key>FlutterDeepLinkingEnabled</key>
     <true/>
@@ -329,14 +329,6 @@ dependencies {
     implementation "com.github.ppgco.android-sdk:sdk:2.0.6"
     implementation platform('com.google.firebase:firebase-bom:33.3.0')
     implementation 'com.google.firebase:firebase-messaging'
-}
-```
-
-On top add gms plugin:
-```groovy
-plugins {
-    ...
-    id "com.google.gms.google-services"
 }
 ```
 
