@@ -24,6 +24,8 @@ class NotificationService: UNNotificationServiceExtension {
         group.enter()
         group.enter()
 
+        SharedData.shared.appGroupId = "YOUR APP GROUP ID"
+
         PPG.notificationDelivered(notificationRequest: request) { _ in
             group.leave()
         }

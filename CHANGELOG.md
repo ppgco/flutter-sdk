@@ -29,3 +29,8 @@ VERSION REDACTED
 ## 0.0.9
 Update android-sdk to 2.0.6 version
 Fix issue with "crashing app" on background run
+
+## 1.0.0
+Update ios-sdk to 2.0.1 version
+Fix issue with delivered events on ios apps
+Breaking changes: requires AppGroups capability on ios App target

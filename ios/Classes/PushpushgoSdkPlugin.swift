@@ -166,6 +166,11 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
       print("Initialize method argument should be hashable map")
       return callback("error");
     }
+
+    guard let appGroupId = hashable["appGroupId"] as? String else {
+      print("appGroupId is required")
+      return callback("error");
+    }
     
     guard let projectId = hashable["projectId"] as? String else {
       print("projectId is required")
@@ -178,7 +183,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     }
     
     UNUserNotificationCenter.current().delegate = PushpushgoSdkPlugin.instance
-    PPG.initializeNotifications(projectId: projectId, apiToken: apiToken)
+    PPG.initializeNotifications(projectId: projectId, apiToken: apiToken, appGroupId: appGroupId)
     
     return callback("success")
   }
