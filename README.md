@@ -4,6 +4,11 @@
 
 Official PushPushGo SDK client for Flutter apps (iOS, Android)
 
+> [!IMPORTANT]
+> **Version 1.0.0+ Breaking changes**
+>
+> - To be able to use v1.0.0+ you will need to add AppGroups capability to your iOS project target.
+
 ## Supported platforms:
  - iOS
  - Android
@@ -84,6 +89,7 @@ $ xed ios/
 4. On **Background Modes** select items:
  - Remote notifications
  - Background fetch
+ - AppGroups (from v1.0.1)
 
 ### 2.2.2 Add NotificationServiceExtension
 1. Go to file -> New -> Target
@@ -110,6 +116,9 @@ $ xed ios/
             let group = DispatchGroup()
             group.enter()
             group.enter()
+
+            // Fill your app group id
+            SharedData.shared.appGroupId = "YOUR APP GROUP ID" 
 
             PPG.notificationDelivered(notificationRequest: request) { _ in
                 group.leave()
