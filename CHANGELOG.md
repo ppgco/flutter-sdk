@@ -34,3 +34,6 @@ Fix issue with "crashing app" on background run
 Update ios-sdk to 2.0.1 version
 Fix issue with delivered events on ios apps
 Breaking changes: requires AppGroups capability on ios App target
+
+## 1.0.2
+Fix ios sdk versioning

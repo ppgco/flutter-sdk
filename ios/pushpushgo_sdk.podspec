@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'pushpushgo_sdk'
-  s.version          = '1.0.1'
+  s.version          = '1.0.2'
   s.summary          = 'PushPushGo SDK'
   s.description      = <<-DESC
   PushPushGo SDK for Flutter (Dart)
@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.dependency 'PPG_framework', '~> 2.0.1'
+  s.dependency 'PPG_framework', '~> 2.0.2'
   s.platform = :ios, '14.0'
 
   # Flutter.framework does not contain a i386 slice.
