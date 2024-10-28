@@ -49,6 +49,7 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
     final pushpushgo = PushpushgoSdk({
         "apiToken": "my-api-key-from-pushpushgo-app", 
         "projectId": "my-project-id-from-pushpushgo-app"
+        "appGroupId: "your-app-group-id-from-provisioning-profile"  // required from v1.0.0+
     });
     
     pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
@@ -89,7 +90,7 @@ $ xed ios/
 4. On **Background Modes** select items:
  - Remote notifications
  - Background fetch
- - AppGroups (from v1.0.1)
+ - AppGroups (from v1.0.0+)
 
 ### 2.2.2 Add NotificationServiceExtension
 1. Go to file -> New -> Target
