@@ -49,7 +49,7 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
     final pushpushgo = PushpushgoSdk({
         "apiToken": "my-api-key-from-pushpushgo-app", 
         "projectId": "my-project-id-from-pushpushgo-app"
-        "appGroupId: "your-app-group-id-from-provisioning-profile"  // required from v1.0.0+
+        "appGroupId": "your-app-group-id-from-provisioning-profile"  // required from v1.0.0+
     });
     
     pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
