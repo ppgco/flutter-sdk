@@ -40,3 +40,6 @@ Fix ios sdk versioning
 
 ## 1.0.3
 Add PPG.registerNotificationsDeliveredFromUserInfo() into PushPushGoSdkPlugin.swift
+
+## 1.0.4
+Pre release test version for fixing delivery events on app killed
