@@ -86,11 +86,10 @@ $ xed ios/
 ### 2.2.1 Enable Push Notification Capabilities in Project Target
 1. Select your root item in files tree called "**your_project_name**" with blue icon and select **your_project_name** in **Target** section.
 2. Go to Signing & Capabilities tab and click on "**+ Capability**" under tabs.
-3. Select **Push Notifications** and **Background Modes**
+3. Select **Push Notifications**, **Background Modes** and **AppGroups (from v1.0.0+)**
 4. On **Background Modes** select items:
  - Remote notifications
  - Background fetch
- - AppGroups (from v1.0.0+)
 
 ### 2.2.2 Add NotificationServiceExtension
 1. Go to file -> New -> Target
