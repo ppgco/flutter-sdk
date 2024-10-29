@@ -37,3 +37,6 @@ Breaking changes: requires AppGroups capability on ios App target
 
 ## 1.0.2
 Fix ios sdk versioning
+
+## 1.0.3
+Add PPG.registerNotificationsDeliveredFromUserInfo() into PushPushGoSdkPlugin.swift

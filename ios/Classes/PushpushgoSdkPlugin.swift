@@ -104,7 +104,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
            let value = it["value"] as? String,
            let strategy = it["strategy"] as? String,
            let ttl = it["ttl"] as? Int64 {
-            beacon.addTag(BeaconTag(tag: value, label: key, strategy: createBeaconTagStrategy(strategy), ttl: ttl ?? 0))
+            beacon.addTag(BeaconTag(tag: value, label: key, strategy: createBeaconTagStrategy(strategy), ttl: ttl))
         } else {
           print("cannot parse to string key or value, omit");
         }
@@ -214,9 +214,12 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     }
   }
 
-  public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) -> Bool {
+  public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
       print("didReceiveRemoteNotification")
-      return true
+      PPG.registerNotificationDeliveredFromUserInfo(userInfo: userInfo) { status in
+          print(status);
+      }
+      completionHandler(.newData)
   }
 
   // Works only on UIKit on SwiftUI it can be done onChange()
@@ -243,7 +246,7 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
   public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
       print("userNotificationCenter.willPresent")
       // Display notification when app is in foreground, optional
-      completionHandler([.alert, .badge, .sound])
+      completionHandler([.banner, .badge, .sound])
   }
   
   public func userNotificationCenter(_ center: UNUserNotificationCenter,
