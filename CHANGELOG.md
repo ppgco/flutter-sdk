@@ -43,3 +43,7 @@ Add PPG.registerNotificationsDeliveredFromUserInfo() into PushPushGoSdkPlugin.sw
 
 ## 1.0.4
 Pre release test version for fixing delivery events on app killed
+
+## 1.1.0
+Fix async completion handler issue in PPG.registerNotificationsDeliveredFromUserInfo()
+Fix delivered event issue

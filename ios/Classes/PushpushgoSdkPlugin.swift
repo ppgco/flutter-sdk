@@ -50,7 +50,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     }
   }
 
-  public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+  public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable: Any] = [:]) -> Bool {
     self.application = application;
     return true
   }
@@ -214,12 +214,13 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     }
   }
 
-  public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+  public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) -> Bool {
       print("didReceiveRemoteNotification")
       PPG.registerNotificationDeliveredFromUserInfo(userInfo: userInfo) { status in
           print(status);
-      }
       completionHandler(.newData)
+      }
+      return true
   }
 
   // Works only on UIKit on SwiftUI it can be done onChange()
