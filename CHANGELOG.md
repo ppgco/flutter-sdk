@@ -47,3 +47,8 @@ Pre release test version for fixing delivery events on app killed
 ## 1.1.0
 Fix async completion handler issue in PPG.registerNotificationsDeliveredFromUserInfo()
 Fix delivered event issue
+
+## 1.2.0
+Add support for Swift Package Manager (SPM)
+Add support for push notification buttons
+Fix error for channeling methods not from main thread
