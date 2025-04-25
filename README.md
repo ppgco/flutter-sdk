@@ -5,6 +5,13 @@
 Official PushPushGo SDK client for Flutter apps (iOS, Android)
 
 > [!IMPORTANT]
+> **SPM Support Added (2025):**
+>
+> This SDK now supports both CocoaPods and Swift Package Manager (SPM) for iOS integration. See the iOS Support section for details on both methods.
+> **NOTE:**
+> The native PushPushGo iOS SDK supports integration via CocoaPods only up to version 2.1.0.
+> Swift Package Manager (SPM) support for flutter is available starting from version 3.0.0
+>
 > **Version 1.0.0+ Breaking changes**
 >
 > - To be able to use v1.0.0+ you will need to add AppGroups capability to your iOS project target.
@@ -63,25 +70,48 @@ Then fill apiToken and projectId by your credentials from PPG project.
 
 
 # 2. iOS Support
-## 2.1 In Xcode open Podfile in /ios/ folder
-**Next steps are performed using Cocoapods package manager.**
 
-**Make sure your minimum deployment platform version is at lest 14.0**
+> **IMPORTANT: SPM Support Added!**
+>
+> As of version 1.2.0, this SDK supports both CocoaPods and Swift Package Manager (SPM) for iOS integration. Existing users can continue using CocoaPods, while new users are encouraged to try SPM for a simpler setup. See below for both options.
 
-Add to `target 'Runner' do` on the end of declaration:
+## 2.1 Option 1: Integrate via CocoaPods (Legacy, Still Supported)
+
+**Make sure your minimum deployment platform version is at least 14.0**
+
+Add to `target 'Runner' do` at the end of the declaration:
 ```pod
   pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git'
 ```
 
-After that in terminal navigate to yourFlutterProject/ios/ and run command:
+After that, in terminal, navigate to yourFlutterProject/ios/ and run:
 ```bash
 $ pod install
 ```
 
-## 2.2 Open XCode with `ios/` directory
-```sh
-$ xed ios/
-```
+## 2.2 Option 2: Integrate via Swift Package Manager (Recommended)
+
+1. **Enable SPM support in your Flutter SDK (requires Flutter 3.24+):**
+   ```bash
+   flutter config --enable-swift-package-manager
+   ```
+2. **Open your iOS project in Xcode:**
+   ```bash
+   xed ios/
+   ```
+3. **Add the PushPushGo iOS SDK as a Swift Package:**
+   - In Xcode, go to `File > Add Packages...`
+   - Enter the SDK repo URL: `https://github.com/ppgco/ios-sdk.git`
+   - Select the version and add it to your app target (and Notification Service Extension if needed)
+
+---
+
+**Note:**
+- Both methods are supported. SPM is recommended for new projects or if you want to avoid CocoaPods.
+- If you migrate from CocoaPods to SPM, you can safely remove the Podfile and Pods directory after verifying SPM integration works.
+- If you encounter issues, ensure your Flutter version is up to date and SPM is enabled with `flutter config --enable-swift-package-manager`.
+
+## 2.3 Continue with Xcode Setup
 
 ### 2.2.1 Enable Push Notification Capabilities in Project Target
 1. Select your root item in files tree called "**your_project_name**" with blue icon and select **your_project_name** in **Target** section.
@@ -91,13 +121,16 @@ $ xed ios/
  - Remote notifications
  - Background fetch
 
-### 2.2.2 Add NotificationServiceExtension
-1. Go to file -> New -> Target
-2. Search for **Notification Service Extension** and choose product name may be for example **NSE**
-3. Finish process and on prompt about __Activate “NSE” scheme?__ click **Cancel**
-4. Open file NotificationService.swift
-5. Paste this code:
-    ```swift
+### 2.2.2 Add Notification Service Extension (NSE) Support
+
+#### 1. Create the NSE Target
+
+1. In Xcode, go to **File > New > Target…**
+2. Choose **Notification Service Extension** and give it a name (e.g., `NSE`).
+3. When prompted, click **Cancel** on "Activate scheme?".
+4. Open the generated `NotificationService.swift` and edit it:
+
+```swift
     import UserNotifications
     import PPG_framework
 
@@ -144,22 +177,40 @@ $ xed ios/
 
     }
     ```
-6. Add NotificationServiceExtension target to `Podfile`:
-   Use name of file you created - in our case 'NSE'
-    ```pod
-    target 'NSE' do
-      use_frameworks!
-      use_modular_headers!
-      pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git'
-    end
-    ```
 
-8. And again navigate to yourFlutterProject/ios/ in terminal and run command:
-    ```bash
-    $ pod install
-    ```
+#### 2. Link PPG_framework to NSE Target
 
-9. (optional) In `Info.plist` add folowing to enable deep linking in flutter
+##### **A. If using Swift Package Manager (SPM):**
+- In Xcode, select the NSE target.
+- Go to the **General** tab.
+- In **Frameworks, Libraries, and Embedded Content**, click **+**.
+- Add **PPG_framework** (from the SPM section).
+- Make sure it is set to "Embed & Sign" if required.
+
+##### **B. If using CocoaPods:**
+- In your `Podfile`, add:
+  ```ruby
+  target 'NSE' do
+    use_frameworks!
+    use_modular_headers!
+    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git'
+  end
+  ```
+- Run:
+  ```bash
+  cd ios
+  pod install
+  ```
+
+#### 3. Additional Notes
+- The NSE target must always have `PPG_framework` linked, regardless of package manager.
+- If you use SPM for the main app, use SPM for NSE for consistency.
+- If you use CocoaPods for the main app, use CocoaPods for NSE.
+- If you encounter linker errors, double-check that `PPG_framework` is visible in the NSE target's "Linked Frameworks and Libraries" section in Xcode.
+
+---
+    
+(optional) In `Info.plist` add folowing to enable deep linking in flutter
     ```xml
     <key>FlutterDeepLinkingEnabled</key>
     <true/>
@@ -173,7 +224,7 @@ $ xed ios/
  4. Select your __Certificate Singing Request__ file
  5. Download Certificates and open in KeyChain Access (double click in macos)
  6. Find this certificate in list select then in context menu (right click) select export and export to .p12 format file with password.
- 7. Login into app and add this `Certificate.p12` file with password via UI (https://next.pushpushgo.com/projects/YourProjectID/settings/integration/fcm)
+ 7. Login into app and add this `Certificate.p12` file with password via UI (https://next.pushpushgo.com/projects/YourProjectID/settings/integration/apns)
  
  For manual certificate generation visit our tutorial - https://docs.pushpushgo.company/application/providers/mobile-push/apns
 

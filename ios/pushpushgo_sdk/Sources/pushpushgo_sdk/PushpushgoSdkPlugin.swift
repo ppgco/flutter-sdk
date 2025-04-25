@@ -59,13 +59,15 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
   private func unregisterFromNotifications(callback: @escaping FlutterResult) {
     print("unregisterFromNotifications")
     PPG.unsubscribeUser() { result in
-      switch result {
-      case .error(let error):
-          // handle error
-          print(error)
-          return callback("error")
-      case .success:
-          return callback("success")
+      DispatchQueue.main.async {
+        switch result {
+        case .error(let error):
+            // handle error
+            print(error)
+            return callback("error")
+        case .success:
+            return callback("success")
+        }
       }
     }
   }
@@ -151,12 +153,14 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     }
     
     beacon.send() { result in
-      switch(result) {
-        case .error(let error):
-          print(error);
-          return callback("error")
-        case .success:
-          return callback("success")
+      DispatchQueue.main.async {
+        switch(result) {
+          case .error(let error):
+            print(error);
+            return callback("error")
+          case .success:
+            return callback("success")
+        }
       }
     }
   }
@@ -195,13 +199,15 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     }
     
     PPG.registerForNotifications(application: application, handler: { result in
-        switch result {
-        case .error(let error):
-            // handle error
-            print(error)
-            return callback("error")
-        case .success:
-            return callback("success")
+        DispatchQueue.main.async {
+          switch result {
+          case .error(let error):
+              // handle error
+              print(error)
+              return callback("error")
+          case .success:
+              return callback("success")
+          }
         }
     })
   }
@@ -210,7 +216,9 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     PPG.sendDeviceToken(deviceToken) { subscriberId in
       print(deviceToken)
       print(subscriberId)
-      self.channel?.invokeMethod(MethodIdentifier.onNewSubscription.rawValue, arguments: PPG.subscriberId)
+      DispatchQueue.main.async {
+        self.channel?.invokeMethod(MethodIdentifier.onNewSubscription.rawValue, arguments: PPG.subscriberId)
+      }
     }
   }
 
@@ -231,7 +239,9 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
   public func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
     print("didFailToRegisterForRemoteNotificationsWithError")
     print(error.localizedDescription)
-    channel?.invokeMethod(MethodIdentifier.onNewSubscription.rawValue, arguments: "{\"error\": \(error.localizedDescription)}")
+    DispatchQueue.main.async {
+      self.channel?.invokeMethod(MethodIdentifier.onNewSubscription.rawValue, arguments: "{\"error\": \(error.localizedDescription)}")
+    }
   }
   
   public func applicationDidBecomeActive(_ application: UIApplication) {
@@ -247,7 +257,7 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
   public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
       print("userNotificationCenter.willPresent")
       // Display notification when app is in foreground, optional
-      completionHandler([.banner, .badge, .sound])
+      completionHandler([.alert, .badge, .sound])
   }
   
   public func userNotificationCenter(_ center: UNUserNotificationCenter,
@@ -256,17 +266,26 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
             @escaping () -> Void) {
     print("userNotificationCenter.didReceive")
 
-    // Send information about clicked notification to framework
-    PPG.notificationClicked(response: response)
+    let actionIdentifier = response.actionIdentifier
+    // Handle the action
+    if actionIdentifier == UNNotificationDefaultActionIdentifier {
+        // User tapped the notification itself
+        PPG.notificationClicked(response: response)
+    } else if actionIdentifier == "button_1" {
+        PPG.notificationButtonClicked(response: response, button: 1)
+    } else if actionIdentifier == "button_2" {
+        PPG.notificationButtonClicked(response: response, button: 2)
+    } else {
+        // Track as regular notification click for unknown actions
+        PPG.notificationClicked(response: response)
+    }
 
-    // Open external link from push notification
-    // Remove this section if this behavior is not expected
-    guard let url = PPG.getUrlFromNotificationResponse(response: response)
-        else {
-            completionHandler()
-            return
+    // Handle URL opening if present
+    if let url = PPG.getUrlFromNotificationResponse(response: response) {
+        DispatchQueue.main.async {
+            UIApplication.shared.open(url)
         }
-    UIApplication.shared.open(url)
+    }
     completionHandler()
   }
   
