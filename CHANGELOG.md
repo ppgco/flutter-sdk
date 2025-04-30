@@ -52,3 +52,6 @@ Fix delivered event issue
 Add support for Swift Package Manager (SPM)
 Add support for push notification buttons
 Fix error for channeling methods not from main thread
+
+## 1.2.1
+Fix support of cocoapods (change path to plugin, change podfile version)

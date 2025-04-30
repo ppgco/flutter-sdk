@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'pushpushgo_sdk'
-  s.version          = '1.1.0'
+  s.version          = '1.2.1'
   s.summary          = 'PushPushGo SDK'
   s.description      = <<-DESC
   PushPushGo SDK for Flutter (Dart)
@@ -14,7 +14,7 @@ Pod::Spec.new do |s|
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'PushPushGo Developers' => 'support@pushpushgo.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'pushpushgo_sdk/Sources/pushpushgo_sdk/**/*'
   s.dependency 'Flutter'
   s.dependency 'PPG_framework'
   s.platform = :ios, '14.0'
