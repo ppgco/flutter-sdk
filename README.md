@@ -81,7 +81,7 @@ Then fill apiToken and projectId by your credentials from PPG project.
 
 Add to `target 'Runner' do` at the end of the declaration:
 ```pod
-  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git'
+  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '2.0.2'
 ```
 
 After that, in terminal, navigate to yourFlutterProject/ios/ and run:
@@ -193,7 +193,7 @@ $ pod install
   target 'NSE' do
     use_frameworks!
     use_modular_headers!
-    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git'
+    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '2.0.2'
   end
   ```
 - Run:
