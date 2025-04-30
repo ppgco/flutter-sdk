@@ -55,8 +55,10 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
 ```dart
     final pushpushgo = PushpushgoSdk({
         "apiToken": "my-api-key-from-pushpushgo-app", 
-        "projectId": "my-project-id-from-pushpushgo-app"
-        "appGroupId": "your-app-group-id-from-provisioning-profile"  // required from v1.0.0+
+        "projectId": "my-project-id-from-pushpushgo-app",
+        // required from v1.0.0+
+        // AppGroup can be received/created in Xcode -> Target Runner -> Signing&Capabilities
+        "appGroupId": "your-app-group-id-from-provisioning-profile"
     });
     
     pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
