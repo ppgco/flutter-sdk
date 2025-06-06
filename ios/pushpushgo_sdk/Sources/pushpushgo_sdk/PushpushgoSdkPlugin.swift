@@ -281,10 +281,32 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
     }
 
     // Handle URL opening if present
-    if let url = PPG.getUrlFromNotificationResponse(response: response) {
+    let (responseUrl, isUniversalLink) = PPG.getUrlFromNotificationResponse(response: response)
+
+    if let url = responseUrl {
+        #if !APP_EXTENSION
         DispatchQueue.main.async {
-            UIApplication.shared.open(url)
+            if isUniversalLink {
+                // Handle as Universal Link using NSUserActivity
+                let userActivity = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
+                userActivity.webpageURL = url
+                
+                if let appDelegate = UIApplication.shared.delegate,
+                   appDelegate.responds(to: #selector(UIApplicationDelegate.application(_:continue:restorationHandler:))) {
+                    appDelegate.application?(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
+                } else {
+                    // Fallback if app delegate can't handle it or is not configured for UL
+                    UIApplication.shared.open(url)
+                }
+            } else {
+                // Open as regular URL in browser
+                UIApplication.shared.open(url)
+            }
         }
+        #else
+        // In an app extension, we typically wouldn't open URLs.
+        print("PushPushGo SDK (Flutter Plugin): URL opening skipped in app extension context.")
+        #endif
     }
     completionHandler()
   }

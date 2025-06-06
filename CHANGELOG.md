@@ -55,3 +55,7 @@ Fix error for channeling methods not from main thread
 
 ## 1.2.1
 Fix support of cocoapods (change path to plugin, change podfile version)
+
+## 1.2.2
+Cocoapods supported for ios from version 3.0.3
+Add Universal Links support

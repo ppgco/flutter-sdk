@@ -8,9 +8,9 @@ Official PushPushGo SDK client for Flutter apps (iOS, Android)
 > **SPM Support Added (2025):**
 >
 > This SDK now supports both CocoaPods and Swift Package Manager (SPM) for iOS integration. See the iOS Support section for details on both methods.
-> **NOTE:**
-> The native PushPushGo iOS SDK supports integration via CocoaPods only up to version 2.1.0.
-> Swift Package Manager (SPM) support for flutter is available starting from version 3.0.0
+>
+> New Cocoapods support is available starting from version 3.0.3 (iOS)
+> Swift Package Manager (SPM) support for flutter is available starting from version 3.0.0 (iOS)
 >
 > **Version 1.0.0+ Breaking changes**
 >
@@ -81,7 +81,7 @@ Then fill apiToken and projectId by your credentials from PPG project.
 
 Add to `target 'Runner' do` at the end of the declaration:
 ```pod
-  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '2.0.2'
+  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '3.0.3'
 ```
 
 After that, in terminal, navigate to yourFlutterProject/ios/ and run:
@@ -193,7 +193,7 @@ $ pod install
   target 'NSE' do
     use_frameworks!
     use_modular_headers!
-    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '2.0.2'
+    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '3.0.3'
   end
   ```
 - Run:

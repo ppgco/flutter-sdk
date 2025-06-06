@@ -31,12 +31,12 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '2.0.1'
+  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '3.0.3'
 end
 
 target 'NSE' do
   use_frameworks!
-  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '2.0.1'
+  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '3.0.3'
 end
 
 
