@@ -10,6 +10,7 @@ Official PushPushGo SDK client for Flutter apps (iOS, Android)
 > This SDK now supports both CocoaPods and Swift Package Manager (SPM) for iOS integration. See the iOS Support section for details on both methods.
 >
 > New Cocoapods support is available starting from version 3.0.3 (iOS)
+> 
 > Swift Package Manager (SPM) support for flutter is available starting from version 3.0.0 (iOS)
 >
 > **Version 1.0.0+ Breaking changes**
