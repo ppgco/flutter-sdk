@@ -69,10 +69,10 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "com.github.ppgco.android-sdk:sdk:2.0.6"
+    implementation "com.github.ppgco.android-sdk:sdk:2.2.4"
 
     // GMS
-    implementation platform('com.google.firebase:firebase-bom:31.0.1')
+    implementation platform('com.google.firebase:firebase-bom:33.16.0')
     implementation 'com.google.firebase:firebase-messaging'
 
     // // HMS

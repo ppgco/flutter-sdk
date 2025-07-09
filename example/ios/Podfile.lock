@@ -1,7 +1,7 @@
 PODS:
   - Flutter (1.0.0)
-  - PPG_framework (3.0.3)
-  - pushpushgo_sdk (1.2.2):
+  - PPG_framework (3.0.4)
+  - pushpushgo_sdk (1.2.3):
     - Flutter
     - PPG_framework
 

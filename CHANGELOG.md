@@ -59,3 +59,7 @@ Fix support of cocoapods (change path to plugin, change podfile version)
 ## 1.2.2
 Cocoapods supported for ios from version 3.0.3
 Add Universal Links support
+
+## 1.2.3
+Update android and firebase libraries
+Fix sdk namespace problem
