@@ -28,6 +28,7 @@ Official PushPushGo SDK client for Flutter apps (iOS, Android)
 - For iOS - Cocoapods (or other package manager)
 
 **Approximate time of integration (without further implementation): 2-3h**
+**Before you start, make sure to remove all previous integrations with other providers.**
 
 ## Environment setup
 Make sure that you have flutter installed, and `flutter doctor` command pass.
