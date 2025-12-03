@@ -28,6 +28,9 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     registrar.addApplicationDelegate(instance)
     registrar.addMethodCallDelegate(instance, channel: channel)
     
+    // Register In-App Messages plugin
+    InAppMessagesPlugin.register(with: registrar)
+    
     print("registrar")
   }
     

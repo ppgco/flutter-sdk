@@ -5,6 +5,10 @@ import 'package:pushpushgo_sdk/beacon.dart';
 import 'package:pushpushgo_sdk/common_channel.dart';
 import 'package:flutter/services.dart';
 
+// In-App Messages exports
+export 'package:pushpushgo_sdk/ppg_inappmessages.dart';
+export 'package:pushpushgo_sdk/ppg_inappmessages_observer.dart';
+
 typedef MessageHandler = Function(Map<String, dynamic> message);
 typedef SubscriptionHandler = Function(String serializedJSON);
 
