@@ -20,8 +20,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   
   final _pushpushgo = PushpushgoSdk({
-    "apiToken": "my-api-key", 
-    "projectId": "my-project-id"
+    "apiToken": "42100f60-d357-4f2d-bd08-b4ed39bceaef", 
+    "projectId": "679c8e8ed9aea951ef295e1f"
   });
 
   @override
@@ -42,8 +42,9 @@ class _MyAppState extends State<MyApp> {
 
     // Initialize In-App Messages SDK
     await PPGInAppMessages.instance.initialize(
-      apiKey: "my-api-key",
-      projectId: "my-project-id",
+      apiKey: "42100f60-d357-4f2d-bd08-b4ed39bceaef",
+      projectId: "679c8e8ed9aea951ef295e1f",
+      isProduction: false,  // Use staging API (api.master1.qappg.co)
       isDebug: true,
     );
 
@@ -96,6 +97,7 @@ class HomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
+                        settings: const RouteSettings(name: '/details'),
                         builder: (context) => const DetailScreen(),
                       ),
                     );
@@ -181,13 +183,15 @@ class DetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Detail Screen'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        body: const Center(child: Text("Detail screen")),
       ),
+      body: const Center(child: Text("Detail screen")),
     );
   }
 }

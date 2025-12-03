@@ -40,9 +40,16 @@ class PPGInAppMessages {
   bool _isInitialized = false;
   CustomCodeActionHandler? _customCodeHandler;
   StreamSubscription<dynamic>? _eventSubscription;
+  String? _pendingRoute;
 
   /// Check if SDK is initialized
   bool get isInitialized => _isInitialized;
+  
+  /// Buffer a route change that occurred before initialization
+  /// Called by NavigatorObserver when SDK is not yet initialized
+  void bufferRoute(String route) {
+    _pendingRoute = route;
+  }
 
   /// Initialize the In-App Messages SDK
   /// 
@@ -76,6 +83,12 @@ class PPGInAppMessages {
       );
       _isInitialized = true;
       log('PPGInAppMessages: Initialized successfully');
+      
+      // Process any buffered route from NavigatorObserver
+      if (_pendingRoute != null) {
+        await onRouteChanged(_pendingRoute!);
+        _pendingRoute = null;
+      }
     } catch (e) {
       log('PPGInAppMessages: Initialization failed - $e');
       rethrow;

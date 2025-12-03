@@ -67,9 +67,12 @@ class InAppMessagesNavigatorObserver extends NavigatorObserver {
   void _notifyRouteChange(Route<dynamic>? route) {
     final routeName = _extractRouteName(route);
     if (routeName != null && routeName.isNotEmpty) {
-      // Only notify if SDK is initialized
       if (PPGInAppMessages.instance.isInitialized) {
+        // SDK is ready - send route change immediately
         PPGInAppMessages.instance.onRouteChanged(routeName);
+      } else {
+        // SDK not yet initialized - buffer the route for later
+        PPGInAppMessages.instance.bufferRoute(routeName);
       }
     }
   }

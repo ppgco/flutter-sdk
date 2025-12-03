@@ -260,7 +260,7 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
   public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
       print("userNotificationCenter.willPresent")
       // Display notification when app is in foreground, optional
-      completionHandler([.alert, .badge, .sound])
+      completionHandler([.banner, .list, .badge, .sound])
   }
   
   public func userNotificationCenter(_ center: UNUserNotificationCenter,
@@ -296,7 +296,7 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
                 
                 if let appDelegate = UIApplication.shared.delegate,
                    appDelegate.responds(to: #selector(UIApplicationDelegate.application(_:continue:restorationHandler:))) {
-                    appDelegate.application?(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
+                    _ = appDelegate.application?(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
                 } else {
                     // Fallback if app delegate can't handle it or is not configured for UL
                     UIApplication.shared.open(url)

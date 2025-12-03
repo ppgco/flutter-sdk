@@ -1,0 +1,240 @@
+# PushPushGo In-App Messages - Flutter SDK
+
+This document describes how to integrate In-App Messages functionality in your Flutter application.
+
+## Requirements
+
+- Flutter SDK >= 2.19.6
+- iOS 14.0+
+- Android minSdk 26+
+
+## Installation
+
+The In-App Messages SDK is included in the main `pushpushgo_sdk` package. No additional dependencies are required.
+
+## Setup
+
+### 1. Initialize the SDK
+
+Initialize the In-App Messages SDK after your main PushPushGo SDK initialization:
+
+```dart
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+
+// In your app initialization (e.g., initState or main)
+await PPGInAppMessages.instance.initialize(
+  apiKey: "YOUR_API_KEY",
+  projectId: "YOUR_PROJECT_ID",
+  isProduction: true,  // false for PPG staging/testing environment
+  isDebug: false,      // true to enable debug logs
+);
+```
+
+### 2. Add NavigatorObserver
+
+To automatically track screen/route changes and display In-App Messages based on routes, add the `InAppMessagesNavigatorObserver` to your `MaterialApp`:
+
+```dart
+import 'package:pushpushgo_sdk/ppg_inappmessages_observer.dart';
+
+MaterialApp(
+  navigatorObservers: [
+    InAppMessagesNavigatorObserver(),
+  ],
+  routes: {
+    '/': (context) => HomeScreen(),
+    '/details': (context) => DetailScreen(),
+  },
+  // ... other configuration
+)
+```
+
+**Important:** When using `Navigator.push()` with `MaterialPageRoute`, make sure to include `RouteSettings` with a name:
+
+```dart
+Navigator.of(context).push(
+  MaterialPageRoute(
+    settings: const RouteSettings(name: '/details'),  // Required for route tracking
+    builder: (context) => const DetailScreen(),
+  ),
+);
+```
+
+### 3. Custom Route Name Extraction (Optional)
+
+If your app uses a custom routing solution, you can provide a custom route name extractor:
+
+```dart
+InAppMessagesNavigatorObserver(
+  routeNameExtractor: (route) {
+    // Custom logic to extract route name
+    return route?.settings.name ?? '/unknown';
+  },
+)
+```
+
+## Manual Route Tracking
+
+If you're not using `NavigatorObserver`, you can manually notify the SDK about route changes:
+
+```dart
+PPGInAppMessages.instance.onRouteChanged('/home');
+```
+
+## Custom Triggers
+
+You can trigger In-App Messages based on custom events:
+
+```dart
+PPGInAppMessages.instance.showMessagesOnTrigger(
+  key: "action",
+  value: "purchase_completed",
+);
+```
+
+## Custom Code Actions
+
+Handle custom code actions from In-App Message buttons:
+
+```dart
+PPGInAppMessages.instance.setCustomCodeActionHandler((code) {
+  print("Custom code received: $code");
+  
+  // Handle custom actions
+  switch (code) {
+    case "open_settings":
+      Navigator.pushNamed(context, '/settings');
+      break;
+    case "apply_discount":
+      applyDiscount();
+      break;
+  }
+});
+```
+
+## Clear Message Cache
+
+To force fresh data fetch:
+
+```dart
+await PPGInAppMessages.instance.clearMessageCache();
+```
+
+## iOS Specific Setup
+
+### CocoaPods
+
+The `PPG_InAppMessages` pod is automatically included when you add `pushpushgo_sdk` to your Flutter project.
+
+If using manual CocoaPods integration, add to your `Podfile`:
+
+```ruby
+pod 'PPG_InAppMessages', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.1.2'
+```
+
+### Swift Package Manager
+
+If using SPM, the `PPG_InAppMessages` library is included in the ios-sdk package.
+
+## Android Specific Setup
+
+No additional setup required. The Android In-App Messages SDK is automatically included.
+
+Make sure your `minSdk` is at least 26 in your app's `build.gradle`:
+
+```gradle
+android {
+    defaultConfig {
+        minSdk 26
+    }
+}
+```
+
+## Example
+
+See the [example app](example/) for a complete integration example.
+
+```dart
+import 'dart:developer';
+import 'package:flutter/material.dart';
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+import 'package:pushpushgo_sdk/ppg_inappmessages_observer.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    // Initialize In-App Messages SDK
+    await PPGInAppMessages.instance.initialize(
+      apiKey: "YOUR_API_KEY",
+      projectId: "YOUR_PROJECT_ID",
+      isDebug: true,
+    );
+
+    // Set up custom code action handler
+    PPGInAppMessages.instance.setCustomCodeActionHandler((code) {
+      log("Custom code action received: $code");
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorObservers: [
+        InAppMessagesNavigatorObserver(),
+      ],
+      home: const HomeScreen(),
+    );
+  }
+}
+```
+
+## Troubleshooting
+
+### In-App Message not showing
+
+1. **Check initialization**: Ensure `PPGInAppMessages.instance.initialize()` is called before any route changes
+2. **Check route names**: Make sure `RouteSettings(name: '/your-route')` is set when pushing routes
+3. **Enable debug logs**: Set `isDebug: true` in initialization to see detailed logs
+4. **Check message configuration**: Verify the In-App Message is enabled and configured for the correct route/trigger in PushPushGo dashboard
+
+### Route changes not detected
+
+Make sure:
+1. `InAppMessagesNavigatorObserver` is added to `MaterialApp.navigatorObservers`
+2. Routes have names set via `RouteSettings`
+3. SDK is initialized before first navigation
+
+## API Reference
+
+### PPGInAppMessages
+
+| Method | Description |
+|--------|-------------|
+| `initialize(apiKey, projectId, isProduction, isDebug)` | Initialize the SDK |
+| `onRouteChanged(route)` | Notify about route/screen change |
+| `showMessagesOnTrigger(key, value)` | Trigger messages by custom event |
+| `setCustomCodeActionHandler(handler)` | Handle custom code actions |
+| `clearMessageCache()` | Clear cached messages |
+| `isInitialized` | Check if SDK is initialized |
+
+### InAppMessagesNavigatorObserver
+
+| Parameter | Description |
+|-----------|-------------|
+| `routeNameExtractor` | Optional custom function to extract route names |
