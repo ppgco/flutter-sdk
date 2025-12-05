@@ -60,15 +60,232 @@ Navigator.of(context).push(
 );
 ```
 
-### 3. Custom Route Name Extraction (Optional)
+## Router Integration Examples
 
-If your app uses a custom routing solution, you can provide a custom route name extractor:
+### Standard Navigator
+
+When using Flutter's built-in Navigator with named routes:
+
+```dart
+// In MaterialApp
+MaterialApp(
+  navigatorObservers: [
+    InAppMessagesNavigatorObserver(),
+  ],
+  routes: {
+    '/': (context) => HomeScreen(),
+    '/details': (context) => DetailScreen(),
+    '/settings': (context) => SettingsScreen(),
+  },
+)
+
+// Navigation with named routes (recommended)
+Navigator.pushNamed(context, '/details');
+
+// Navigation with MaterialPageRoute - must include RouteSettings!
+Navigator.of(context).push(
+  MaterialPageRoute(
+    settings: const RouteSettings(name: '/details'),
+    builder: (context) => const DetailScreen(),
+  ),
+);
+```
+
+### go_router
+
+[go_router](https://pub.dev/packages/go_router) is a popular declarative routing package. 
+
+```dart
+import 'package:go_router/go_router.dart';
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+
+final goRouter = GoRouter(
+  observers: [
+    // Use custom route extractor for go_router
+    InAppMessagesNavigatorObserver(
+      routeNameExtractor: (route) {
+        // go_router stores the path in route.settings.name
+        return route?.settings.name ?? '/';
+      },
+    ),
+  ],
+  routes: [
+    GoRoute(
+      path: '/',
+      name: 'home',
+      builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/details/:id',
+      name: 'details',
+      builder: (context, state) => DetailScreen(id: state.pathParameters['id']!),
+    ),
+  ],
+);
+
+// In your app
+MaterialApp.router(
+  routerConfig: goRouter,
+)
+```
+
+**Alternative: Manual route tracking with go_router**
+
+If the observer doesn't work well with your go_router setup, use manual tracking:
+
+```dart
+final goRouter = GoRouter(
+  redirect: (context, state) {
+    // Notify SDK on every navigation
+    PPGInAppMessages.instance.onRouteChanged(state.matchedLocation);
+    return null; // No redirect
+  },
+  routes: [...],
+);
+```
+
+### auto_route
+
+[auto_route](https://pub.dev/packages/auto_route) is a code generation based routing solution.
+
+```dart
+import 'package:auto_route/auto_route.dart';
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+
+@AutoRouterConfig()
+class AppRouter extends $AppRouter {
+  @override
+  List<AutoRoute> get routes => [
+    AutoRoute(page: HomeRoute.page, path: '/', initial: true),
+    AutoRoute(page: DetailsRoute.page, path: '/details/:id'),
+    AutoRoute(page: SettingsRoute.page, path: '/settings'),
+  ];
+}
+
+// In your app
+final _appRouter = AppRouter();
+
+MaterialApp.router(
+  routerDelegate: _appRouter.delegate(
+    navigatorObservers: () => [
+      InAppMessagesNavigatorObserver(
+        routeNameExtractor: (route) {
+          // auto_route uses route.settings.name with the route path
+          return route?.settings.name ?? '/';
+        },
+      ),
+    ],
+  ),
+  routeInformationParser: _appRouter.defaultRouteParser(),
+)
+```
+
+**Alternative: Using AutoRouteObserver**
+
+```dart
+class PPGRouteObserver extends AutoRouteObserver {
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    super.didPush(route, previousRoute);
+    final routeName = route.settings.name;
+    if (routeName != null) {
+      PPGInAppMessages.instance.onRouteChanged(routeName);
+    }
+  }
+
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    super.didPop(route, previousRoute);
+    final routeName = previousRoute?.settings.name;
+    if (routeName != null) {
+      PPGInAppMessages.instance.onRouteChanged(routeName);
+    }
+  }
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    final routeName = newRoute?.settings.name;
+    if (routeName != null) {
+      PPGInAppMessages.instance.onRouteChanged(routeName);
+    }
+  }
+}
+
+// Use in router
+MaterialApp.router(
+  routerDelegate: _appRouter.delegate(
+    navigatorObservers: () => [PPGRouteObserver()],
+  ),
+  routeInformationParser: _appRouter.defaultRouteParser(),
+)
+```
+
+### Beamer
+
+[Beamer](https://pub.dev/packages/beamer) is another popular routing package.
+
+```dart
+import 'package:beamer/beamer.dart';
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+
+class MyBeamerDelegate extends BeamerDelegate {
+  MyBeamerDelegate() : super(
+    locationBuilder: RoutesLocationBuilder(
+      routes: {
+        '/': (context, state, data) => const HomeScreen(),
+        '/details/:id': (context, state, data) => DetailScreen(
+          id: state.pathParameters['id']!,
+        ),
+      },
+    ),
+  );
+
+  @override
+  void update({bool rebuild = true}) {
+    super.update(rebuild: rebuild);
+    // Notify SDK on route changes
+    PPGInAppMessages.instance.onRouteChanged(
+      configuration.location ?? '/',
+    );
+  }
+}
+
+final routerDelegate = MyBeamerDelegate();
+
+MaterialApp.router(
+  routerDelegate: routerDelegate,
+  routeInformationParser: BeamerParser(),
+)
+```
+
+### Custom Route Name Extraction
+
+For any routing solution, you can provide a custom route name extractor:
 
 ```dart
 InAppMessagesNavigatorObserver(
   routeNameExtractor: (route) {
     // Custom logic to extract route name
-    return route?.settings.name ?? '/unknown';
+    // Examples:
+    
+    // 1. Use route settings name
+    if (route?.settings.name != null) {
+      return route!.settings.name!;
+    }
+    
+    // 2. Extract from route type
+    if (route is MaterialPageRoute) {
+      // Custom extraction logic
+    }
+    
+    // 3. Use route arguments
+    final args = route?.settings.arguments;
+    if (args is Map && args.containsKey('routeName')) {
+      return args['routeName'] as String;
+    }
+    
+    return '/unknown';
   },
 )
 ```
