@@ -93,8 +93,6 @@ Navigator.of(context).push(
 
 ### go_router
 
-[go_router](https://pub.dev/packages/go_router) is a popular declarative routing package. 
-
 ```dart
 import 'package:go_router/go_router.dart';
 import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
@@ -145,8 +143,6 @@ final goRouter = GoRouter(
 ```
 
 ### auto_route
-
-[auto_route](https://pub.dev/packages/auto_route) is a code generation based routing solution.
 
 ```dart
 import 'package:auto_route/auto_route.dart';
@@ -222,8 +218,6 @@ MaterialApp.router(
 ```
 
 ### Beamer
-
-[Beamer](https://pub.dev/packages/beamer) is another popular routing package.
 
 ```dart
 import 'package:beamer/beamer.dart';
