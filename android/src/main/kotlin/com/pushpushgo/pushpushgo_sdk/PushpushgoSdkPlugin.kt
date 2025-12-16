@@ -41,15 +41,21 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel: MethodChannel
   private lateinit var context: Context
   private lateinit var sharedPrefs: PpgSharedPrefs
+  private val inAppMessagesPlugin = InAppMessagesPlugin()
+  
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "com.pushpushgo/sdk")
     channel.setMethodCallHandler(this)
     context = flutterPluginBinding.applicationContext
     sharedPrefs = PpgSharedPrefs()
+    
+    // Register In-App Messages plugin
+    inAppMessagesPlugin.onAttachedToEngine(flutterPluginBinding)
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
+    inAppMessagesPlugin.onDetachedFromEngine(binding)
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {

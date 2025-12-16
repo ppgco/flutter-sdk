@@ -41,12 +41,13 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 26
     }
 }
 
 dependencies {
     implementation "com.github.ppgco.android-sdk:sdk:2.2.4"
+    implementation "com.github.ppgco.android-sdk:inappmessages:3.0.2"
     implementation 'com.google.firebase:firebase-messaging-ktx:24.1.2'
     implementation platform('com.google.firebase:firebase-bom:33.16.0')
     implementation "com.google.guava:guava:31.1-android"
