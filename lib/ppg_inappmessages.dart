@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/widgets.dart';
 import 'package:pushpushgo_sdk/ppg_inappmessages_channel.dart';
 
 /// Handler for custom code actions from in-app message buttons
@@ -218,7 +219,20 @@ class PPGInAppMessages {
           final code = event['code'] as String?;
           
           if (type == 'customCode' && code != null && _customCodeHandler != null) {
-            _customCodeHandler!(code);
+            // Delay handler call to next frame to ensure UI is ready
+            final binding = WidgetsBinding.instance;
+            if (binding.hasScheduledFrame) {
+              // UI is active - wait for next frame
+              binding.addPostFrameCallback((_) {
+                _customCodeHandler!(code);
+              });
+            } else {
+              // No frame scheduled - schedule one and then call
+              binding.scheduleFrame();
+              binding.addPostFrameCallback((_) {
+                _customCodeHandler!(code);
+              });
+            }
           }
         }
       },
