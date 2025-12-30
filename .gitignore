@@ -32,4 +32,3 @@ build/
 # Firebase generated files
 example/firebase.json
 example/lib/firebase_options.dart
-example/android/app/google-services.json
