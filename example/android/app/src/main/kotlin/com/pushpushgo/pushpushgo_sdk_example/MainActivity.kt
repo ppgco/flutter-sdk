@@ -39,6 +39,7 @@ class MainActivity: FlutterActivity() {
    }
 
     override fun onNewIntent(intent: Intent) {
+       super.onNewIntent(intent)
        PushPushGoHelpers.onNewIntent(this.application, intent)
     }
 

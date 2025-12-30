@@ -26,6 +26,7 @@ enum ChannelMethod {
   registerForNotifications,
   unregisterFromNotifications,
   onNewSubscription,
+  onNotificationClicked,
   getSubscriberId,
   sendBeacon,
   getCredentials,
@@ -42,6 +43,8 @@ extension ChannelMethodExtensions on ChannelMethod {
         return 'unregisterFromNotifications';
       case ChannelMethod.onNewSubscription:
         return 'onNewSubscription';
+      case ChannelMethod.onNotificationClicked:
+        return 'onNotificationClicked';
       case ChannelMethod.getSubscriberId:
         return 'getSubscriberId';
       case ChannelMethod.getCredentials:

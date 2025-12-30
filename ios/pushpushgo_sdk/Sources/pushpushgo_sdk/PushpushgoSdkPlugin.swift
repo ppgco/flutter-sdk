@@ -10,6 +10,7 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     case unregisterFromNotifications
     case getSubscriberId
     case onNewSubscription
+    case onNotificationClicked
     case sendBeacon
   }
   
@@ -280,6 +281,9 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
         PPG.notificationClicked(response: response)
     }
 
+    // Send notification data to Flutter
+    sendNotificationClickedEvent(response: response, actionIdentifier: actionIdentifier)
+
     // Handle URL opening if present
     let (responseUrl, isUniversalLink) = PPG.getUrlFromNotificationResponse(response: response)
 
@@ -313,6 +317,29 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
   
   public func userNotificationCenter(_ center: UNUserNotificationCenter, didDismissNotification notification: UNNotification) {
       print("userNotificationCenter.didDismissNotification")
+  }
+
+  private func sendNotificationClickedEvent(response: UNNotificationResponse, actionIdentifier: String) {
+    let userInfo = response.notification.request.content.userInfo
+    var notificationData: [String: Any] = [:]
+    
+    // Copy all userInfo data
+    for (key, value) in userInfo {
+      if let stringKey = key as? String {
+        notificationData[stringKey] = value
+      }
+    }
+    
+    // Add action identifier
+    notificationData["actionIdentifier"] = actionIdentifier
+    
+    // Add notification content
+    notificationData["title"] = response.notification.request.content.title
+    notificationData["body"] = response.notification.request.content.body
+    
+    DispatchQueue.main.async {
+      self.channel?.invokeMethod(MethodIdentifier.onNotificationClicked.rawValue, arguments: notificationData)
+    }
   }
 }
 

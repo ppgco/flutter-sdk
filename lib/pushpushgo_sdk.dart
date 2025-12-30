@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 typedef MessageHandler = Function(Map<String, dynamic> message);
 typedef SubscriptionHandler = Function(String serializedJSON);
+typedef NotificationClickHandler = Function(Map<String, dynamic> notificationData);
 
 typedef PpgOptions = Map<String, String>;
 
@@ -28,10 +29,14 @@ class PushpushgoSdk {
     throw UnsupportedError("onToken handler must be declared");
   };
 
+  NotificationClickHandler? _onNotificationClickedHandler;
+
   Future<void> initialize({
     required SubscriptionHandler onNewSubscriptionHandler,
+    NotificationClickHandler? onNotificationClickedHandler,
   }) {
     _onNewSubscriptionHandler = onNewSubscriptionHandler;
+    _onNotificationClickedHandler = onNotificationClickedHandler;
 
     CommonChannel.setMethodCallHandler(_handleChannelMethodCallback);
     return CommonChannel.invokeMethod<void>(
@@ -91,6 +96,16 @@ class PushpushgoSdk {
     
     if (method == ChannelMethod.onNewSubscription.name) {
       return _onNewSubscriptionHandler(arguments ?? "");
+    }
+
+    if (method == ChannelMethod.onNotificationClicked.name) {
+      if (_onNotificationClickedHandler != null) {
+        final Map<String, dynamic> data = arguments is Map 
+            ? Map<String, dynamic>.from(arguments) 
+            : <String, dynamic>{};
+        return _onNotificationClickedHandler!(data);
+      }
+      return null;
     }
 
     if (method == ChannelMethod.getCredentials.name) {

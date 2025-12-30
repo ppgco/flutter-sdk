@@ -63,3 +63,7 @@ Add Universal Links support
 ## 1.2.3
 Update android and firebase libraries
 Fix sdk namespace problem
+
+## 1.2.4-beta.1
+Add onNotificationClicked event handler
+Example Android app migration to new version 

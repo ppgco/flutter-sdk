@@ -20,8 +20,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   
   final _pushpushgo = PushpushgoSdk({
-    "apiToken": "my-api-key", 
-    "projectId": "my-project-id"
+    "apiToken": "MY_API_KEY", 
+    "projectId": "MY_PROJECT_ID"
   });
 
   @override
@@ -37,6 +37,14 @@ class _MyAppState extends State<MyApp> {
       onNewSubscriptionHandler: (subscriberId) {
         log("MY SUBSCRIBER ID IS");
         log(subscriberId);
+      },
+      onNotificationClickedHandler: (notificationData) {
+        log("NOTIFICATION CLICKED");
+        log(notificationData.toString());
+        // Example: Navigate to specific screen based on notification data
+        // if (notificationData['deeplink'] != null) {
+        //   Navigator.of(context).pushNamed(notificationData['deeplink']);
+        // }
       }
     );
 
