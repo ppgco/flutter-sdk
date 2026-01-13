@@ -42,10 +42,13 @@ class _MyAppState extends State<MyApp> {
         log("NOTIFICATION CLICKED");
         log(notificationData.toString());
         // Example: Navigate to specific screen based on notification data
-        // if (notificationData['deeplink'] != null) {
-        //   Navigator.of(context).pushNamed(notificationData['deeplink']);
+        // if (notificationData['link'] != null) {
+        //   Navigator.of(context).pushNamed(notificationData['link']);
         // }
-      }
+      },
+      // Set to false to disable automatic URL opening on notification click
+      // When false, you handle the link manually in onNotificationClickedHandler
+      handleNotificationLink: false,
     );
 
     if (!mounted) return;

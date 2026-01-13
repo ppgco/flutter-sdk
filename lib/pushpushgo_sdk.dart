@@ -34,14 +34,19 @@ class PushpushgoSdk {
   Future<void> initialize({
     required SubscriptionHandler onNewSubscriptionHandler,
     NotificationClickHandler? onNotificationClickedHandler,
+    bool handleNotificationLink = true,
   }) {
     _onNewSubscriptionHandler = onNewSubscriptionHandler;
     _onNotificationClickedHandler = onNotificationClickedHandler;
 
     CommonChannel.setMethodCallHandler(_handleChannelMethodCallback);
+    
+    final Map<String, dynamic> initOptions = Map<String, dynamic>.from(options);
+    initOptions['handleNotificationLink'] = handleNotificationLink.toString();
+    
     return CommonChannel.invokeMethod<void>(
       method: ChannelMethod.initialize,
-      arguments: options
+      arguments: initOptions
     ).catchError(
       (error) {
         if (error is! TimeoutException) throw error;

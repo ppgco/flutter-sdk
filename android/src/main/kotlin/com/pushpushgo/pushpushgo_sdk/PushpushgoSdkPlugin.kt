@@ -131,18 +131,23 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
           val apiToken = call.argument<String>("apiToken") ?: throw Exception("apiToken is is required");
           val projectId = call.argument<String>("projectId") ?: throw Exception("projectId is is required");
 
+          val handleNotificationLinkArg = call.argument<String>("handleNotificationLink")
+          val handleNotificationLink = handleNotificationLinkArg?.lowercase() != "false"
+
           PushPushGo.getInstance(
             application = context.applicationContext as Application,
             apiKey = apiToken,
             projectId = projectId,
             isProduction = call.argument<Boolean>("isProduction") ?: true,
             isDebug = call.argument<Boolean>("isDebug") ?: false,
+            handleNotificationLink = handleNotificationLink
           );
 
           sharedPrefs.setCredentials(context, mapOf(
             "apiToken" to apiToken,
             "projectId" to projectId
           ))
+          sharedPrefs.setHandleNotificationLink(context, handleNotificationLink)
 
           // Mark as initialized and send any pending notification data
           isInitialized = true
