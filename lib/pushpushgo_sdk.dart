@@ -34,13 +34,19 @@ class PushpushgoSdk {
 
   Future<void> initialize({
     required SubscriptionHandler onNewSubscriptionHandler,
+    bool isProduction = true,
+    bool isDebug = false,
   }) {
     _onNewSubscriptionHandler = onNewSubscriptionHandler;
+
+    final Map<String, dynamic> initOptions = Map<String, dynamic>.from(options);
+    initOptions['isProduction'] = isProduction;
+    initOptions['isDebug'] = isDebug;
 
     CommonChannel.setMethodCallHandler(_handleChannelMethodCallback);
     return CommonChannel.invokeMethod<void>(
       method: ChannelMethod.initialize,
-      arguments: options
+      arguments: initOptions
     ).catchError(
       (error) {
         if (error is! TimeoutException) throw error;

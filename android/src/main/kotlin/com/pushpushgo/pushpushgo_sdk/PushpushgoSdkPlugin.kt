@@ -66,18 +66,22 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
           val apiToken = call.argument<String>("apiToken") ?: throw Exception("apiToken is is required");
           val projectId = call.argument<String>("projectId") ?: throw Exception("projectId is is required");
 
+          val isProduction = call.argument<Boolean>("isProduction") ?: true
+          val isDebug = call.argument<Boolean>("isDebug") ?: false
+
           PushPushGo.getInstance(
             application = context.applicationContext as Application,
             apiKey = apiToken,
             projectId = projectId,
-            isProduction = call.argument<Boolean>("isProduction") ?: true,
-            isDebug = call.argument<Boolean>("isDebug") ?: false,
+            isProduction = isProduction,
+            isDebug = isDebug,
           );
 
           sharedPrefs.setCredentials(context, mapOf(
             "apiToken" to apiToken,
             "projectId" to projectId
           ))
+          sharedPrefs.setEnvironmentConfig(context, isProduction, isDebug)
 
           result.success("success")
         } catch(error: Exception) {

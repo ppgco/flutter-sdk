@@ -1,10 +1,13 @@
 package com.pushpushgo.pushpushgo_sdk
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.util.Log
 import com.pushpushgo.inappmessages.InAppMessagesSDK
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -12,7 +15,7 @@ import io.flutter.plugin.common.MethodChannel
 /**
  * Flutter plugin for PushPushGo In-App Messages
  */
-class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
+class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ActivityAware {
 
     companion object {
         private const val TAG = "InAppMessagesPlugin"
@@ -24,6 +27,7 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
     private lateinit var eventChannel: EventChannel
     private lateinit var context: Context
     private var eventSink: EventChannel.EventSink? = null
+    private var activity: Activity? = null
 
     // Method identifiers
     private enum class MethodIdentifier {
@@ -72,10 +76,17 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
         }
     }
 
-    // MARK: - Method Implementations
+    // Method Implementations
 
     private fun handleInitialize(call: MethodCall, result: MethodChannel.Result) {
         try {
+            // Check if SDK was already initialized by ContentProvider
+            if (InAppMessagesContentProvider.isEarlyInitialized) {
+                Log.d(TAG, "InAppMessagesSDK already initialized by ContentProvider")
+                result.success("success")
+                return
+            }
+            
             val apiKey = call.argument<String>("apiKey")
                 ?: return result.error("INVALID_ARGUMENTS", "apiKey is required", null)
             val projectId = call.argument<String>("projectId")
@@ -95,7 +106,7 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
                 baseUrl = baseUrl
             )
 
-            Log.d(TAG, "InAppMessagesSDK initialized")
+            Log.d(TAG, "InAppMessagesSDK initialized from Dart")
             result.success("success")
         } catch (e: Exception) {
             Log.e(TAG, "Initialization failed", e)
@@ -161,7 +172,7 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
         result.success(null)
     }
 
-    // MARK: - EventChannel.StreamHandler
+    // EventChannel.StreamHandler
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         eventSink = events
@@ -171,5 +182,25 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
     override fun onCancel(arguments: Any?) {
         eventSink = null
         Log.d(TAG, "Event stream disconnected")
+    }
+
+    // ActivityAware
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        activity = binding.activity
+        Log.d(TAG, "Activity attached: ${activity?.javaClass?.simpleName}")
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        activity = null
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        activity = binding.activity
+        Log.d(TAG, "Activity reattached: ${activity?.javaClass?.simpleName}")
+    }
+
+    override fun onDetachedFromActivity() {
+        activity = null
     }
 }

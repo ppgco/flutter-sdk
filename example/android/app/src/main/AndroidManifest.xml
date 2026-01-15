@@ -6,6 +6,12 @@
         android:label="pushpushgo_sdk_example"
         android:name=".MainApplication" 
         android:icon="@mipmap/ic_launcher">
+        
+        <!-- In-App Messages Configuration (early initialization via ContentProvider) -->
+        <meta-data android:name="com.pushpushgo.inapp.projectId" android:value="692709eac9a8af1af56d923e" />
+        <meta-data android:name="com.pushpushgo.inapp.apiKey" android:value="d362ffa4-caf4-48a9-810e-ac0c7c47d3e3" />
+        <meta-data android:name="com.pushpushgo.inapp.isDebug" android:value="true" />
+        <meta-data android:name="com.pushpushgo.inapp.baseUrl" android:value="https://api.master1.qappg.co/" />
 
         <activity
             android:name=".MainActivity"

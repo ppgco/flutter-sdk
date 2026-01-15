@@ -11,15 +11,19 @@ class PushPushGoHelpers {
 
         fun initialize(application: Application): Boolean {
             val prefs = PpgSharedPrefs()
-            val creds = prefs.getCredentials(application.applicationContext);
+            val context = application.applicationContext
+            val creds = prefs.getCredentials(context)
 
             if (creds["apiToken"] != "" && creds["projectId"] != "") {
+                val isProduction = prefs.getIsProduction(context)
+                val isDebug = prefs.getIsDebug(context)
+
                 PushPushGo.getInstance(
                     application = application,
                     apiKey = if (creds["apiToken"] is String) creds["apiToken"] as String else throw Exception("apiToken is is required"),
                     projectId = if (creds["projectId"] is String) creds["projectId"] as String else throw Exception("projectId is is required"),
-                    isProduction = true,
-                    isDebug = false
+                    isProduction = isProduction,
+                    isDebug = isDebug
                 )
 
                 return true

@@ -42,12 +42,18 @@ class _MyAppState extends State<MyApp> {
       onNewSubscriptionHandler: (subscriberId) {
         log("MY SUBSCRIBER ID IS");
         log(subscriberId);
-      }
+      },
+      isProduction: false,  // Use staging API (api.master1.qappg.co)
+      isDebug: true,
     );
 
     // Auto-register for notifications on app start (common use case)
-    final registerResult = await _pushpushgo.registerForNotifications();
-    log("Auto-register result: $registerResult");
+    try {
+      final registerResult = await _pushpushgo.registerForNotifications();
+      log("Auto-register result: $registerResult");
+    } catch (e) {
+      log("Auto-register failed (will retry manually): $e");
+    }
 
     // Initialize In-App Messages SDK
     await PPGInAppMessages.instance.initialize(
