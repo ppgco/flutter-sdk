@@ -134,14 +134,21 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
           val handleNotificationLinkArg = call.argument<String>("handleNotificationLink")
           val handleNotificationLink = handleNotificationLinkArg?.lowercase() != "false"
 
-          PushPushGo.getInstance(
+          val ppg = PushPushGo.getInstance(
             application = context.applicationContext as Application,
             apiKey = apiToken,
             projectId = projectId,
             isProduction = call.argument<Boolean>("isProduction") ?: true,
-            isDebug = call.argument<Boolean>("isDebug") ?: false,
-            handleNotificationLink = handleNotificationLink
-          );
+            isDebug = call.argument<Boolean>("isDebug") ?: false
+          )
+
+          // Override Android notification handler if handleNotificationLink is false
+          if (!handleNotificationLink) {
+            ppg.notificationHandler = { _, url, _ ->
+              Log.d("PpgPlugin", "Link click intercepted (not opening): $url")
+              // Don't open link - Flutter will handle via onNotificationClickedHandler
+            }
+          }
 
           sharedPrefs.setCredentials(context, mapOf(
             "apiToken" to apiToken,
