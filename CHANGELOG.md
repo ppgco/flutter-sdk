@@ -63,3 +63,11 @@ Add Universal Links support
 ## 1.2.3
 Update android and firebase libraries
 Fix sdk namespace problem
+
+## 1.2.4-beta.1
+Add onNotificationClicked event handler
+Example Android app migration to new version 
+
+## 1.2.4-beta.2
+Add handleNotificationLink option to control automatic URL opening on notification click
+Update Android SDK to 3.0.2

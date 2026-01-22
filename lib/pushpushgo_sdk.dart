@@ -11,6 +11,7 @@ export 'package:pushpushgo_sdk/ppg_inappmessages_observer.dart';
 
 typedef MessageHandler = Function(Map<String, dynamic> message);
 typedef SubscriptionHandler = Function(String serializedJSON);
+typedef NotificationClickHandler = Function(Map<String, dynamic> notificationData);
 
 typedef PpgOptions = Map<String, String>;
 
@@ -32,18 +33,25 @@ class PushpushgoSdk {
     throw UnsupportedError("onToken handler must be declared");
   };
 
+  NotificationClickHandler? _onNotificationClickedHandler;
+
   Future<void> initialize({
     required SubscriptionHandler onNewSubscriptionHandler,
+    NotificationClickHandler? onNotificationClickedHandler,
+    bool handleNotificationLink = true,
     bool isProduction = true,
     bool isDebug = false,
   }) {
     _onNewSubscriptionHandler = onNewSubscriptionHandler;
-
-    final Map<String, dynamic> initOptions = Map<String, dynamic>.from(options);
-    initOptions['isProduction'] = isProduction;
-    initOptions['isDebug'] = isDebug;
+    _onNotificationClickedHandler = onNotificationClickedHandler;
 
     CommonChannel.setMethodCallHandler(_handleChannelMethodCallback);
+    
+    final Map<String, dynamic> initOptions = Map<String, dynamic>.from(options);
+    initOptions['handleNotificationLink'] = handleNotificationLink.toString();
+    initOptions['isProduction'] = isProduction;
+    initOptions['isDebug'] = isDebug;
+    
     return CommonChannel.invokeMethod<void>(
       method: ChannelMethod.initialize,
       arguments: initOptions
@@ -101,6 +109,16 @@ class PushpushgoSdk {
     
     if (method == ChannelMethod.onNewSubscription.name) {
       return _onNewSubscriptionHandler(arguments ?? "");
+    }
+
+    if (method == ChannelMethod.onNotificationClicked.name) {
+      if (_onNotificationClickedHandler != null) {
+        final Map<String, dynamic> data = arguments is Map 
+            ? Map<String, dynamic>.from(arguments) 
+            : <String, dynamic>{};
+        return _onNotificationClickedHandler!(data);
+      }
+      return null;
     }
 
     if (method == ChannelMethod.getCredentials.name) {

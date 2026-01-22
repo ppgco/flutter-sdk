@@ -10,11 +10,13 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     case unregisterFromNotifications
     case getSubscriberId
     case onNewSubscription
+    case onNotificationClicked
     case sendBeacon
   }
   
   private var channel: FlutterMethodChannel?
   private var application: UIApplication?
+  private var handleNotificationLink: Bool = true
   
   static var instance: PushpushgoSdkPlugin?
   
@@ -189,6 +191,13 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
       return callback("error");
     }
     
+    // Parse handleNotificationLink option
+    if let handleLinkStr = hashable["handleNotificationLink"] as? String {
+      self.handleNotificationLink = handleLinkStr.lowercased() != "false"
+    } else {
+      self.handleNotificationLink = true
+    }
+    
     UNUserNotificationCenter.current().delegate = PushpushgoSdkPlugin.instance
     PPG.initializeNotifications(projectId: projectId, apiToken: apiToken, appGroupId: appGroupId)
     
@@ -283,39 +292,67 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
         PPG.notificationClicked(response: response)
     }
 
-    // Handle URL opening if present
-    let (responseUrl, isUniversalLink) = PPG.getUrlFromNotificationResponse(response: response)
+    // Send notification data to Flutter
+    sendNotificationClickedEvent(response: response, actionIdentifier: actionIdentifier)
 
-    if let url = responseUrl {
-        #if !APP_EXTENSION
-        DispatchQueue.main.async {
-            if isUniversalLink {
-                // Handle as Universal Link using NSUserActivity
-                let userActivity = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
-                userActivity.webpageURL = url
-                
-                if let appDelegate = UIApplication.shared.delegate,
-                   appDelegate.responds(to: #selector(UIApplicationDelegate.application(_:continue:restorationHandler:))) {
-                    _ = appDelegate.application?(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
-                } else {
-                    // Fallback if app delegate can't handle it or is not configured for UL
-                    UIApplication.shared.open(url)
-                }
-            } else {
-                // Open as regular URL in browser
-                UIApplication.shared.open(url)
-            }
-        }
-        #else
-        // In an app extension, we typically wouldn't open URLs.
-        print("PushPushGo SDK (Flutter Plugin): URL opening skipped in app extension context.")
-        #endif
+    // Handle URL opening if present and handleNotificationLink is enabled
+    if self.handleNotificationLink {
+      let (responseUrl, isUniversalLink) = PPG.getUrlFromNotificationResponse(response: response)
+
+      if let url = responseUrl {
+          #if !APP_EXTENSION
+          DispatchQueue.main.async {
+              if isUniversalLink {
+                  // Handle as Universal Link using NSUserActivity
+                  let userActivity = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
+                  userActivity.webpageURL = url
+                  
+                  if let appDelegate = UIApplication.shared.delegate,
+                     appDelegate.responds(to: #selector(UIApplicationDelegate.application(_:continue:restorationHandler:))) {
+                      appDelegate.application?(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
+                  } else {
+                      // Fallback if app delegate can't handle it or is not configured for UL
+                      UIApplication.shared.open(url)
+                  }
+              } else {
+                  // Open as regular URL in browser
+                  UIApplication.shared.open(url)
+              }
+          }
+          #else
+          // In an app extension, we typically wouldn't open URLs.
+          print("PushPushGo SDK (Flutter Plugin): URL opening skipped in app extension context.")
+          #endif
+      }
     }
     completionHandler()
   }
   
   public func userNotificationCenter(_ center: UNUserNotificationCenter, didDismissNotification notification: UNNotification) {
       print("userNotificationCenter.didDismissNotification")
+  }
+
+  private func sendNotificationClickedEvent(response: UNNotificationResponse, actionIdentifier: String) {
+    let userInfo = response.notification.request.content.userInfo
+    var notificationData: [String: Any] = [:]
+    
+    // Copy all userInfo data
+    for (key, value) in userInfo {
+      if let stringKey = key as? String {
+        notificationData[stringKey] = value
+      }
+    }
+    
+    // Add action identifier
+    notificationData["actionIdentifier"] = actionIdentifier
+    
+    // Add notification content
+    notificationData["title"] = response.notification.request.content.title
+    notificationData["body"] = response.notification.request.content.body
+    
+    DispatchQueue.main.async {
+      self.channel?.invokeMethod(MethodIdentifier.onNotificationClicked.rawValue, arguments: notificationData)
+    }
   }
 }
 

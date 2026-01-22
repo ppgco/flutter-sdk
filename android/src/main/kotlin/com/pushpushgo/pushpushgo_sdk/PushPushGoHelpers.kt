@@ -34,14 +34,20 @@ class PushPushGoHelpers {
 
         fun onNewIntent(application: Application, intent: Intent) {
             if (PushPushGoHelpers.initialize(application)) {
-                PushPushGo.getInstance().handleBackgroundNotificationClick(intent);
+                val prefs = PpgSharedPrefs()
+                if (prefs.getHandleNotificationLink(application.applicationContext)) {
+                    PushPushGo.getInstance().handleBackgroundNotificationClick(intent);
+                }
             }
         }
 
         fun onCreate(application: Application, intent: Intent?, savedInstanceState: Bundle?) {
             if (savedInstanceState == null) {
                 if (PushPushGoHelpers.initialize(application)) {
-                    PushPushGo.getInstance().handleBackgroundNotificationClick(intent);
+                    val prefs = PpgSharedPrefs()
+                    if (prefs.getHandleNotificationLink(application.applicationContext)) {
+                        PushPushGo.getInstance().handleBackgroundNotificationClick(intent);
+                    }
                 }
             }
         }

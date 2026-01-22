@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'pushpushgo_sdk'
-  s.version          = '1.2.3'
+  s.version          = '1.2.4-beta.1'
   s.summary          = 'PushPushGo SDK'
   s.description      = <<-DESC
   PushPushGo SDK for Flutter (Dart)

@@ -56,5 +56,13 @@ class PpgSharedPrefs {
         val sharedPreferences = getSharedPreferences(context)
         return sharedPreferences.getBoolean("isDebug", false)
     }
+
+    fun setHandleNotificationLink(context: Context, handleLink: Boolean) {
+        saveString(context, "handleNotificationLink", handleLink.toString())
+    }
+
+    fun getHandleNotificationLink(context: Context): Boolean {
+        return getString(context, "handleNotificationLink", "true") == "true"
+    }
 }
 

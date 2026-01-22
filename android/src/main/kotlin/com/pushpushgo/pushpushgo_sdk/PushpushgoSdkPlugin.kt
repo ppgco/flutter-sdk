@@ -1,7 +1,9 @@
 package com.pushpushgo.pushpushgo_sdk
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
@@ -10,10 +12,13 @@ import com.google.common.util.concurrent.Futures
 import com.google.firebase.FirebaseApp
 import com.pushpushgo.sdk.PushPushGo
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.PluginRegistry
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -27,7 +32,8 @@ enum class MethodIdentifier {
   getSubscriberId,
   sendBeacon,
   getCredentials,
-  onNewSubscription;
+  onNewSubscription,
+  onNotificationClicked;
   companion object {
     fun create(name: String): MethodIdentifier {
       return values().find { it.name.equals(name, ignoreCase = true) }
@@ -37,18 +43,25 @@ enum class MethodIdentifier {
 
 }
 
-class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
+class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, PluginRegistry.NewIntentListener {
   private lateinit var channel: MethodChannel
   private lateinit var context: Context
   private lateinit var sharedPrefs: PpgSharedPrefs
   private val inAppMessagesPlugin = InAppMessagesPlugin()
-  
+  private var activity: Activity? = null
+  private var pendingNotificationData: Map<String, Any?>? = null
+  private var isInitialized = false
+
+  companion object {
+    private const val PPG_PUSH_CAMPAIGN_KEY = "campaign"
+    private const val PPG_PUSH_PROJECT_KEY = "project"
+  }
+
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "com.pushpushgo/sdk")
     channel.setMethodCallHandler(this)
     context = flutterPluginBinding.applicationContext
     sharedPrefs = PpgSharedPrefs()
-    
     // Register In-App Messages plugin
     inAppMessagesPlugin.onAttachedToEngine(flutterPluginBinding)
   }
@@ -56,6 +69,62 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
     inAppMessagesPlugin.onDetachedFromEngine(binding)
+  }
+
+  override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+    activity = binding.activity
+    binding.addOnNewIntentListener(this)
+    // Check if app was launched from notification
+    handleIntent(binding.activity.intent)
+  }
+
+  override fun onDetachedFromActivityForConfigChanges() {
+    activity = null
+  }
+
+  override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+    activity = binding.activity
+    binding.addOnNewIntentListener(this)
+  }
+
+  override fun onDetachedFromActivity() {
+    activity = null
+  }
+
+  override fun onNewIntent(intent: Intent): Boolean {
+    handleIntent(intent)
+    return false
+  }
+
+  private fun handleIntent(intent: Intent?) {
+    intent?.let {
+      val extras = it.extras
+      if (extras != null && (extras.containsKey(PPG_PUSH_CAMPAIGN_KEY) || extras.containsKey(PPG_PUSH_PROJECT_KEY))) {
+        val notificationData = mutableMapOf<String, Any?>()
+        for (key in extras.keySet()) {
+          val value = extras.get(key)
+          // Only include serializable types (skip Bundle and other complex types)
+          if (value is String || value is Number || value is Boolean) {
+            notificationData[key] = value
+          }
+        }
+        sendNotificationClickedEvent(notificationData)
+      }
+    }
+  }
+
+  private fun sendNotificationClickedEvent(data: Map<String, Any?>) {
+    pendingNotificationData = data
+    if (isInitialized) {
+      trySendPendingNotification()
+    }
+  }
+
+  private fun trySendPendingNotification() {
+    pendingNotificationData?.let { data ->
+      channel.invokeMethod(MethodIdentifier.onNotificationClicked.name, data)
+      pendingNotificationData = null
+    }
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -68,20 +137,35 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler {
 
           val isProduction = call.argument<Boolean>("isProduction") ?: true
           val isDebug = call.argument<Boolean>("isDebug") ?: false
+          val handleNotificationLinkArg = call.argument<String>("handleNotificationLink")
+          val handleNotificationLink = handleNotificationLinkArg?.lowercase() != "false"
 
-          PushPushGo.getInstance(
+          val ppg = PushPushGo.getInstance(
             application = context.applicationContext as Application,
             apiKey = apiToken,
             projectId = projectId,
             isProduction = isProduction,
             isDebug = isDebug,
-          );
+          )
+
+          // Override Android notification handler if handleNotificationLink is false
+          if (!handleNotificationLink) {
+            ppg.notificationHandler = { _, url, _ ->
+              Log.d("PpgPlugin", "Link click intercepted (not opening): $url")
+              // Don't open link - Flutter will handle via onNotificationClickedHandler
+            }
+          }
 
           sharedPrefs.setCredentials(context, mapOf(
             "apiToken" to apiToken,
             "projectId" to projectId
           ))
           sharedPrefs.setEnvironmentConfig(context, isProduction, isDebug)
+          sharedPrefs.setHandleNotificationLink(context, handleNotificationLink)
+
+          // Mark as initialized and send any pending notification data
+          isInitialized = true
+          trySendPendingNotification()
 
           result.success("success")
         } catch(error: Exception) {

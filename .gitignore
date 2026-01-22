@@ -33,3 +33,7 @@ build/
 **/.build/
 **/.index-build/
 **/swiftpm/
+
+# Firebase generated files
+example/firebase.json
+example/lib/firebase_options.dart

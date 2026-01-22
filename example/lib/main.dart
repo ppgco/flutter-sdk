@@ -24,8 +24,8 @@ final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<Scaffol
 class _MyAppState extends State<MyApp> {
   
   final _pushpushgo = PushpushgoSdk({
-    "apiToken": "d362ffa4-caf4-48a9-810e-ac0c7c47d3e3", 
-    "projectId": "692709eac9a8af1af56d923e",
+    "apiToken": "MY_API_KEY", 
+    "projectId": "MY_PROJECT_ID",
     "appGroupId": "group.ppg.fluttersdk"
   });
 
@@ -43,6 +43,17 @@ class _MyAppState extends State<MyApp> {
         log("MY SUBSCRIBER ID IS");
         log(subscriberId);
       },
+      onNotificationClickedHandler: (notificationData) {
+        log("NOTIFICATION CLICKED");
+        log(notificationData.toString());
+        // Example: Navigate to specific screen based on notification data
+        // if (notificationData['link'] != null) {
+        //   Navigator.of(context).pushNamed(notificationData['link']);
+        // }
+      },
+      // Set to false to disable automatic URL opening on notification click
+      // When false, you handle the link manually in onNotificationClickedHandler
+      handleNotificationLink: false,
       isProduction: false,  // Use staging API (api.master1.qappg.co)
       isDebug: true,
     );
