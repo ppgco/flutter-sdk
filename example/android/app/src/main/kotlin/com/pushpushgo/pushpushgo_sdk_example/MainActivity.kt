@@ -39,7 +39,8 @@ class MainActivity: FlutterFragmentActivity() {
    }
 
     override fun onNewIntent(intent: Intent) {
-       PushPushGoHelpers.onNewIntent(this.application, intent)
+        super.onNewIntent(intent)
+        PushPushGoHelpers.onNewIntent(this.application, intent)
     }
 
 }
