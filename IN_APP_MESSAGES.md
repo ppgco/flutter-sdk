@@ -349,7 +349,39 @@ If using SPM, the `PPG_InAppMessages` library is included in the ios-sdk package
 
 ## Android Specific Setup
 
-No additional setup required. The Android In-App Messages SDK is automatically included.
+### 1. Add meta-data to AndroidManifest.xml
+
+Add the following configuration inside your `<application>` tag in `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<application ...>
+    <!-- In-App Messages Configuration -->
+    <meta-data 
+        android:name="com.pushpushgo.inapp.projectId" 
+        android:value="YOUR_PROJECT_ID" />
+    <meta-data 
+        android:name="com.pushpushgo.inapp.apiKey" 
+        android:value="YOUR_API_KEY" />
+    <meta-data 
+        android:name="com.pushpushgo.inapp.isDebug" 
+        android:value="false" />
+    <!-- Optional: Use staging API -->
+    <!-- <meta-data 
+        android:name="com.pushpushgo.inapp.baseUrl" 
+        android:value="https://api.master1.qappg.co/" /> -->
+    
+    <!-- ... rest of your application -->
+</application>
+```
+
+| Meta-data key | Description |
+|---------------|-------------|
+| `com.pushpushgo.inapp.projectId` | Your PushPushGo project ID |
+| `com.pushpushgo.inapp.apiKey` | Your PushPushGo API key |
+| `com.pushpushgo.inapp.isDebug` | Enable debug logs (`true`/`false`) |
+| `com.pushpushgo.inapp.baseUrl` | Optional: Custom API base URL (for staging) |
+
+### 2. Minimum SDK Version
 
 Make sure your `minSdk` is at least 26 in your app's `build.gradle`:
 
@@ -357,6 +389,18 @@ Make sure your `minSdk` is at least 26 in your app's `build.gradle`:
 android {
     defaultConfig {
         minSdk 26
+    }
+}
+```
+
+### 3. Dependencies
+
+The In-App Messages SDK is automatically included. Make sure you have the following in your root `build.gradle`:
+
+```gradle
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
     }
 }
 ```

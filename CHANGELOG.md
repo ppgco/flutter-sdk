@@ -71,3 +71,22 @@ Example Android app migration to new version
 ## 1.2.4-beta.2
 Add handleNotificationLink option to control automatic URL opening on notification click
 Update Android SDK to 3.0.2
+
+## 1.2.4
+### New Features
+- **In-App Messages** - Display targeted messages within your app based on routes or custom triggers
+  - Route-based message triggering with `InAppMessagesNavigatorObserver`
+  - Custom event triggers via `showMessagesOnTrigger()`
+  - Custom code action handlers for button clicks
+  - Support for multiple routers (Navigator, go_router, auto_route, Beamer)
+  - Separate documentation in `IN_APP_MESSAGES.md`
+- **Notification Click Handler** - Handle push notification clicks directly in Flutter
+  - New `onNotificationClickedHandler` callback in `initialize()` method
+  - New `handleNotificationLink` option to control automatic URL opening
+  - Access to full notification payload (link, campaign, project, custom data)
+
+### Improvements
+- iOS: Fix cold start notification handling with `pendingNotificationData` mechanism
+- Updated documentation with In-App Messages guide and notification handler examples
+- Update PPG Android SDK to 3.0.2
+- Update PPG In-App Messages SDK to 3.0.2

@@ -2,6 +2,7 @@
     package="com.pushpushgo.pushpushgo_sdk_example">
        
     <!-- Moved from ${applicationName} -->
+
     <application
         android:label="pushpushgo_sdk_example"
         android:name=".MainApplication" 
