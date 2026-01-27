@@ -5,7 +5,7 @@
 Official PushPushGo SDK client for Flutter apps (iOS, Android)
 
 > [!IMPORTANT]
-> **New in v1.2.4:**
+> **New in v1.3.0:**
 >
 > - **In-App Messages** - Display targeted messages within your app based on routes or custom triggers. See [In-App Messages Documentation](IN_APP_MESSAGES.md) for details.
 > - **Notification Click Handler** - Handle notification clicks in Flutter with `onNotificationClickedHandler` callback.
