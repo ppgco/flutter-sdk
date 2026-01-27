@@ -72,7 +72,7 @@ Example Android app migration to new version
 Add handleNotificationLink option to control automatic URL opening on notification click
 Update Android SDK to 3.0.2
 
-## 1.2.4
+## 1.3.0
 ### New Features
 - **In-App Messages** - Display targeted messages within your app based on routes or custom triggers
   - Route-based message triggering with `InAppMessagesNavigatorObserver`
