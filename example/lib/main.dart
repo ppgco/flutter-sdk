@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            color: _statusColor.withValues(alpha: 0.2),
+            color: _statusColor.withOpacity(0.2),
             child: Row(
               children: [
                 Icon(
