@@ -90,3 +90,11 @@ Update Android SDK to 3.0.2
 - Updated documentation with In-App Messages guide and notification handler examples
 - Update PPG Android SDK to 3.0.2
 - Update PPG In-App Messages SDK to 3.0.2
+
+
+## 1.3.1
+### Bug Fixes
+- **Android: Fix cold-start crash** - Added `PushPushGoContentProvider` for early SDK initialization
+  - Prevents `PushPushException: You have to initialize PushPushGo with context first!` on first app install
+  - SDK now initializes via ContentProvider before FCM can trigger `onNewToken()`
+  - Supports credentials from AndroidManifest meta-data or SharedPreferences

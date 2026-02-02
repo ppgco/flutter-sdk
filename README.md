@@ -353,7 +353,34 @@ subprojects { subproject ->
 
 This file is placed in `android/app/src/main/`
 
-### 3.3.1 Activities (on main activity level)
+### 3.3.1 (Recommended) Add SDK meta-data to prevent cold-start crashes
+
+To prevent crashes when FCM sends `onNewToken()` before Flutter SDK initialization, add meta-data configuration:
+
+```xml
+<application ...>
+    <!-- PushPushGo SDK Configuration (prevents cold-start crash) -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.projectId" 
+        android:value="YOUR_PROJECT_ID" />
+    <meta-data 
+        android:name="com.pushpushgo.sdk.apiKey" 
+        android:value="YOUR_API_KEY" />
+    <!-- Optional: set to false for staging environment -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.isProduction" 
+        android:value="true" />
+    <!-- Optional: set to true for debug environment -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.isDebug" 
+        android:value="false" />
+    <!-- ... rest of your application -->
+</application>
+```
+
+> **Note:** Without this meta-data, on first app install the SDK might crash with `PushPushException: You have to initialize PushPushGo with context first!` if FCM triggers before Flutter initialization completes.
+
+### 3.3.2 Activities (on main activity level)
 
 ```xml
     <intent-filter>

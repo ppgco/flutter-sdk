@@ -24,8 +24,8 @@ final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<Scaffol
 class _MyAppState extends State<MyApp> {
   
   final _pushpushgo = PushpushgoSdk({
-    "apiToken": "MY_API_KEY", 
-    "projectId": "MY_PROJECT_ID",
+    "apiToken": "YOUR_API_KEY", 
+    "projectId": "YOUR_PROJECT_ID",
     "appGroupId": "group.ppg.fluttersdk"
   });
 
@@ -68,8 +68,8 @@ class _MyAppState extends State<MyApp> {
 
     // Initialize In-App Messages SDK
     await PPGInAppMessages.instance.initialize(
-      apiKey: "d362ffa4-caf4-48a9-810e-ac0c7c47d3e3",
-      projectId: "692709eac9a8af1af56d923e",
+      apiKey: "YOUR_API_KEY",
+      projectId: "YOUR_PROJECT_ID",
       isProduction: false,  // Use staging API (api.master1.qappg.co)
       isDebug: true,
     );
@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            color: _statusColor.withOpacity(0.2),
+            color: _statusColor.withValues(alpha: 0.2),
             child: Row(
               children: [
                 Icon(
@@ -217,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     _statusMessage,
                     style: TextStyle(
-                      color: _statusColor.withOpacity(1),
+                      color: _statusColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

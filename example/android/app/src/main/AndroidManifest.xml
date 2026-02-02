@@ -8,11 +8,19 @@
         android:name=".MainApplication" 
         android:icon="@mipmap/ic_launcher">
         
+        <!-- PushPushGo SDK Configuration (prevents cold-start crash) -->
+        <!-- Uncomment and fill with your credentials:
+        <meta-data android:name="com.pushpushgo.sdk.projectId" android:value="YOUR_PROJECT_ID" />
+        <meta-data android:name="com.pushpushgo.sdk.apiKey" android:value="YOUR_API_KEY" />
+        <meta-data android:name="com.pushpushgo.sdk.isProduction" android:value="true" />
+        -->
+        
         <!-- In-App Messages Configuration (early initialization via ContentProvider) -->
-        <meta-data android:name="com.pushpushgo.inapp.projectId" android:value="692709eac9a8af1af56d923e" />
-        <meta-data android:name="com.pushpushgo.inapp.apiKey" android:value="d362ffa4-caf4-48a9-810e-ac0c7c47d3e3" />
-        <meta-data android:name="com.pushpushgo.inapp.isDebug" android:value="true" />
-        <meta-data android:name="com.pushpushgo.inapp.baseUrl" android:value="https://api.master1.qappg.co/" />
+        <!-- Uncomment and fill with your credentials:
+        <meta-data android:name="com.pushpushgo.inapp.projectId" android:value="YOUR_PROJECT_ID" />
+        <meta-data android:name="com.pushpushgo.inapp.apiKey" android:value="YOUR_API_KEY" />
+        <meta-data android:name="com.pushpushgo.inapp.isDebug" android:value="false" />
+        -->
 
         <activity
             android:name=".MainActivity"
