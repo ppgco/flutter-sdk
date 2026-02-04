@@ -47,20 +47,33 @@ class Beacon {
   late Set<Tag> tagsToDelete;
   late Map<String, dynamic> selectors;
   late String? customId;
+  late String? assignToGroup;
+  late String? unassignFromGroup;
 
   Beacon({
     required this.tags,
     required this.tagsToDelete,
     required this.customId,
     required this.selectors,
+    this.assignToGroup,
+    this.unassignFromGroup,
   });
 
   String serialize() {
-    return jsonEncode({
+    final Map<String, dynamic> data = {
       'tags': tags.map((item) => item.serialize()).toList(),
       'tagsToDelete': tagsToDelete.map((item) => item.serialize()).toList(),
       'selectors': selectors,
       'customId': customId,
-    });
+    };
+    
+    if (assignToGroup != null) {
+      data['assignToGroup'] = assignToGroup;
+    }
+    if (unassignFromGroup != null) {
+      data['unassignFromGroup'] = unassignFromGroup;
+    }
+    
+    return jsonEncode(data);
   }
 }

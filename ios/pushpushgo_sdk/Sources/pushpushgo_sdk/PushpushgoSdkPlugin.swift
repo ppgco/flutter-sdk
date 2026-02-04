@@ -153,6 +153,14 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
       print("cannot parse custom id")
     }
     
+    if let assignToGroup = parsedJSON["assignToGroup"] as? String {
+      beacon.assignToGroup(assignToGroup)
+    }
+    
+    if let unassignFromGroup = parsedJSON["unassignFromGroup"] as? String {
+      beacon.unassignFromGroup(unassignFromGroup)
+    }
+    
     beacon.send() { result in
       DispatchQueue.main.async {
         switch(result) {

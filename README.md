@@ -453,4 +453,26 @@ Paste this below `com.android.library`
             selectors: {"my": "data"}
         )
     );
+
+    // Dynamic Groups (Segments) - assign subscriber to a group
+    _pushpushgo.sendBeacon(
+        Beacon(
+            tags: {},
+            tagsToDelete: {},
+            customId: "my_id",
+            selectors: {},
+            assignToGroup: "premium-users"  // groupId
+        )
+    );
+
+    // Dynamic Groups (Segments) - unassign subscriber from a group
+    _pushpushgo.sendBeacon(
+        Beacon(
+            tags: {},
+            tagsToDelete: {},
+            customId: "my_id",
+            selectors: {},
+            unassignFromGroup: "trial-users"  // groupId
+        )
+    );
 ```

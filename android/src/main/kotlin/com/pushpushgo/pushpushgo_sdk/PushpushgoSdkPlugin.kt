@@ -215,6 +215,12 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
           val customId = parsedJSON["customId"] as? String
           customId?.let { beacon.setCustomId(it) } ?: Log.w("PpgBeaconTranslate", "cannot parse custom id")
 
+          val assignToGroup = parsedJSON.optString("assignToGroup", null)
+          assignToGroup?.let { beacon.assignToGroup(it) }
+
+          val unassignFromGroup = parsedJSON.optString("unassignFromGroup", null)
+          unassignFromGroup?.let { beacon.unassignFromGroup(it) }
+
           beacon.send()
           result.success("success")
       }

@@ -66,4 +66,10 @@ Fix sdk namespace problem
 
 ## 1.2.4-beta.1
 Add onNotificationClicked event handler
-Example Android app migration to new version 
+Example Android app migration to new version
+
+## 1.3.2
+Add Dynamic Groups (Segments) support
+- New `assignToGroup` property in Beacon for assigning subscribers to dynamic groups
+- New `unassignFromGroup` property in Beacon for unassigning subscribers from dynamic groups
+- Requires ios-sdk 4.2.0+ and android-sdk with dynamic groups support 
