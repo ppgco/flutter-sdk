@@ -2,10 +2,25 @@
     package="com.pushpushgo.pushpushgo_sdk_example">
        
     <!-- Moved from ${applicationName} -->
+
     <application
         android:label="pushpushgo_sdk_example"
         android:name=".MainApplication" 
         android:icon="@mipmap/ic_launcher">
+        
+        <!-- PushPushGo SDK Configuration (prevents cold-start crash) -->
+        <!-- Uncomment and fill with your credentials:
+        <meta-data android:name="com.pushpushgo.sdk.projectId" android:value="YOUR_PROJECT_ID" />
+        <meta-data android:name="com.pushpushgo.sdk.apiKey" android:value="YOUR_API_KEY" />
+        <meta-data android:name="com.pushpushgo.sdk.isProduction" android:value="true" />
+        -->
+        
+        <!-- In-App Messages Configuration (early initialization via ContentProvider) -->
+        <!-- Uncomment and fill with your credentials:
+        <meta-data android:name="com.pushpushgo.inapp.projectId" android:value="YOUR_PROJECT_ID" />
+        <meta-data android:name="com.pushpushgo.inapp.apiKey" android:value="YOUR_API_KEY" />
+        <meta-data android:name="com.pushpushgo.inapp.isDebug" android:value="false" />
+        -->
 
         <activity
             android:name=".MainActivity"

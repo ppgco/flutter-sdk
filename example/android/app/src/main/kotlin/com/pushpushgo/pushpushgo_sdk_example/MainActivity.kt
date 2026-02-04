@@ -8,10 +8,10 @@ import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import com.pushpushgo.pushpushgo_sdk.PushPushGoHelpers
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
 
-class MainActivity: FlutterActivity() {
+class MainActivity: FlutterFragmentActivity() {
 
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private fun requestNotificationsPermission() {
@@ -39,8 +39,8 @@ class MainActivity: FlutterActivity() {
    }
 
     override fun onNewIntent(intent: Intent) {
-       super.onNewIntent(intent)
-       PushPushGoHelpers.onNewIntent(this.application, intent)
+        super.onNewIntent(intent)
+        PushPushGoHelpers.onNewIntent(this.application, intent)
     }
 
 }

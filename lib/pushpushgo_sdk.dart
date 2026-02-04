@@ -5,6 +5,10 @@ import 'package:pushpushgo_sdk/beacon.dart';
 import 'package:pushpushgo_sdk/common_channel.dart';
 import 'package:flutter/services.dart';
 
+// In-App Messages exports
+export 'package:pushpushgo_sdk/ppg_inappmessages.dart';
+export 'package:pushpushgo_sdk/ppg_inappmessages_observer.dart';
+
 typedef MessageHandler = Function(Map<String, dynamic> message);
 typedef SubscriptionHandler = Function(String serializedJSON);
 typedef NotificationClickHandler = Function(Map<String, dynamic> notificationData);
@@ -34,14 +38,23 @@ class PushpushgoSdk {
   Future<void> initialize({
     required SubscriptionHandler onNewSubscriptionHandler,
     NotificationClickHandler? onNotificationClickedHandler,
+    bool handleNotificationLink = true,
+    bool isProduction = true,
+    bool isDebug = false,
   }) {
     _onNewSubscriptionHandler = onNewSubscriptionHandler;
     _onNotificationClickedHandler = onNotificationClickedHandler;
 
     CommonChannel.setMethodCallHandler(_handleChannelMethodCallback);
+    
+    final Map<String, dynamic> initOptions = Map<String, dynamic>.from(options);
+    initOptions['handleNotificationLink'] = handleNotificationLink.toString();
+    initOptions['isProduction'] = isProduction;
+    initOptions['isDebug'] = isDebug;
+    
     return CommonChannel.invokeMethod<void>(
       method: ChannelMethod.initialize,
-      arguments: options
+      arguments: initOptions
     ).catchError(
       (error) {
         if (error is! TimeoutException) throw error;

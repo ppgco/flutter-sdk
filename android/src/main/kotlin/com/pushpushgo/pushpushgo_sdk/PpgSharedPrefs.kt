@@ -38,5 +38,31 @@ class PpgSharedPrefs {
             "projectId" to projectId
         )
     }
+
+    fun setEnvironmentConfig(context: Context, isProduction: Boolean, isDebug: Boolean) {
+        val sharedPreferences = getSharedPreferences(context)
+        val editor = sharedPreferences.edit()
+        editor.putBoolean("isProduction", isProduction)
+        editor.putBoolean("isDebug", isDebug)
+        editor.apply()
+    }
+
+    fun getIsProduction(context: Context): Boolean {
+        val sharedPreferences = getSharedPreferences(context)
+        return sharedPreferences.getBoolean("isProduction", true)
+    }
+
+    fun getIsDebug(context: Context): Boolean {
+        val sharedPreferences = getSharedPreferences(context)
+        return sharedPreferences.getBoolean("isDebug", false)
+    }
+
+    fun setHandleNotificationLink(context: Context, handleLink: Boolean) {
+        saveString(context, "handleNotificationLink", handleLink.toString())
+    }
+
+    fun getHandleNotificationLink(context: Context): Boolean {
+        return getString(context, "handleNotificationLink", "true") == "true"
+    }
 }
 

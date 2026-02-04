@@ -47,6 +47,7 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
   private lateinit var channel: MethodChannel
   private lateinit var context: Context
   private lateinit var sharedPrefs: PpgSharedPrefs
+  private val inAppMessagesPlugin = InAppMessagesPlugin()
   private var activity: Activity? = null
   private var pendingNotificationData: Map<String, Any?>? = null
   private var isInitialized = false
@@ -61,10 +62,13 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
     channel.setMethodCallHandler(this)
     context = flutterPluginBinding.applicationContext
     sharedPrefs = PpgSharedPrefs()
+    // Register In-App Messages plugin
+    inAppMessagesPlugin.onAttachedToEngine(flutterPluginBinding)
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
+    inAppMessagesPlugin.onDetachedFromEngine(binding)
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -131,18 +135,33 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
           val apiToken = call.argument<String>("apiToken") ?: throw Exception("apiToken is is required");
           val projectId = call.argument<String>("projectId") ?: throw Exception("projectId is is required");
 
-          PushPushGo.getInstance(
+          val isProduction = call.argument<Boolean>("isProduction") ?: true
+          val isDebug = call.argument<Boolean>("isDebug") ?: false
+          val handleNotificationLinkArg = call.argument<String>("handleNotificationLink")
+          val handleNotificationLink = handleNotificationLinkArg?.lowercase() != "false"
+
+          val ppg = PushPushGo.getInstance(
             application = context.applicationContext as Application,
             apiKey = apiToken,
             projectId = projectId,
-            isProduction = call.argument<Boolean>("isProduction") ?: true,
-            isDebug = call.argument<Boolean>("isDebug") ?: false,
-          );
+            isProduction = isProduction,
+            isDebug = isDebug,
+          )
+
+          // Override Android notification handler if handleNotificationLink is false
+          if (!handleNotificationLink) {
+            ppg.notificationHandler = { _, url, _ ->
+              Log.d("PpgPlugin", "Link click intercepted (not opening): $url")
+              // Don't open link - Flutter will handle via onNotificationClickedHandler
+            }
+          }
 
           sharedPrefs.setCredentials(context, mapOf(
             "apiToken" to apiToken,
             "projectId" to projectId
           ))
+          sharedPrefs.setEnvironmentConfig(context, isProduction, isDebug)
+          sharedPrefs.setHandleNotificationLink(context, handleNotificationLink)
 
           // Mark as initialized and send any pending notification data
           isInitialized = true

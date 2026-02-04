@@ -1,33 +1,34 @@
 PODS:
   - Flutter (1.0.0)
-  - PPG_framework (3.0.4)
+  - PPG_framework (4.1.2)
+  - PPG_InAppMessages (4.1.2)
   - pushpushgo_sdk (1.2.3):
     - Flutter
     - PPG_framework
+    - PPG_InAppMessages
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - PPG_framework (from `https://github.com/ppgco/ios-sdk.git`)
+  - PPG_framework (from `/Users/pushpushgo/Desktop/ios-sdk`)
+  - PPG_InAppMessages (from `/Users/pushpushgo/Desktop/ios-sdk`)
   - pushpushgo_sdk (from `.symlinks/plugins/pushpushgo_sdk/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
   PPG_framework:
-    :git: https://github.com/ppgco/ios-sdk.git
+    :path: "/Users/pushpushgo/Desktop/ios-sdk"
+  PPG_InAppMessages:
+    :path: "/Users/pushpushgo/Desktop/ios-sdk"
   pushpushgo_sdk:
     :path: ".symlinks/plugins/pushpushgo_sdk/ios"
 
-CHECKOUT OPTIONS:
-  PPG_framework:
-    :commit: e2a17d3f71edf8d5cc6b93375828b5a47898b4a1
-    :git: https://github.com/ppgco/ios-sdk.git
-
 SPEC CHECKSUMS:
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  PPG_framework: 8fb3b0bf101b73d38518fe41d3cb95d52a1dd53a
-  pushpushgo_sdk: abc573c469e675276e8915b896b0c8bc2945a017
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  PPG_framework: 73c59f2af76da5a59b2c9e223046110e6416a017
+  PPG_InAppMessages: 1b21fc1186f3b8a4d2f605877178c6a0174e096f
+  pushpushgo_sdk: 032199918284e8c4aeea59eb293f2d620f6b40c0
 
-PODFILE CHECKSUM: 92c832b98dba4d899c78f2bc1ba87e772c4c9411
+PODFILE CHECKSUM: b3d973237f671489455f9d453d34367667a99ece
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.16.2

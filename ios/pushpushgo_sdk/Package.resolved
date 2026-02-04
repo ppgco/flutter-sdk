@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "ios-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ppgco/ios-sdk.git",
+      "state" : {
+        "revision" : "fe8454ad5b7826bd09e0cbd69491d9af569f723b",
+        "version" : "4.1.2"
+      }
+    }
+  ],
+  "version" : 2
+}

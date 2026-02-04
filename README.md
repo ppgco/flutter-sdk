@@ -5,6 +5,11 @@
 Official PushPushGo SDK client for Flutter apps (iOS, Android)
 
 > [!IMPORTANT]
+> **New in v1.3.0:**
+>
+> - **In-App Messages** - Display targeted messages within your app based on routes or custom triggers. See [In-App Messages Documentation](IN_APP_MESSAGES.md) for details.
+> - **Notification Click Handler** - Handle notification clicks in Flutter with `onNotificationClickedHandler` callback.
+>
 > **SPM Support Added (2025):**
 >
 > This SDK now supports both CocoaPods and Swift Package Manager (SPM) for iOS integration. See the iOS Support section for details on both methods.
@@ -64,12 +69,65 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
         "appGroupId": "your-app-group-id-from-provisioning-profile"
     });
     
-    pushpushgo.initialize(onNewSubscriptionHandler: (subscriberId) {
-      log(subscriberId);
-    });
+    await pushpushgo.initialize(
+      onNewSubscriptionHandler: (subscriberId) {
+        print("Subscriber ID: $subscriberId");
+      },
+      // Optional: Handle notification clicks in Flutter
+      onNotificationClickedHandler: (notificationData) {
+        print("Notification clicked: $notificationData");
+        // Navigate based on notification data
+        final link = notificationData['link'] as String?;
+        if (link != null) {
+          // Handle deep linking or navigation
+        }
+      },
+      // Set to false to prevent automatic URL opening on notification click
+      // Use this when you want to handle links manually in onNotificationClickedHandler
+      handleNotificationLink: true,  // default: true
+    );
 ```
 
 Then fill apiToken and projectId by your credentials from PPG project.
+
+### 1.2.2 Notification Click Handler (Optional)
+
+You can intercept notification clicks and handle them in your Flutter code:
+
+```dart
+await pushpushgo.initialize(
+  onNewSubscriptionHandler: (subscriberId) {
+    print(subscriberId);
+  },
+  onNotificationClickedHandler: (notificationData) {
+    // notificationData contains all push payload fields including:
+    // - 'link' - the URL configured in the notification
+    // - 'campaign' - campaign ID
+    // - 'project' - project ID
+    // - 'title', 'body' - notification content (iOS only)
+    // - Custom data fields
+    
+    print("Notification data: $notificationData");
+    
+    // Example: Navigate to specific screen based on link
+    final link = notificationData['link'] as String?;
+    if (link == 'https://example.com/promo') {
+      Navigator.pushNamed(context, '/promo');
+    }
+  },
+  // When false, SDK won't open URLs automatically
+  // You handle navigation in onNotificationClickedHandler
+  handleNotificationLink: false,
+);
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `onNewSubscriptionHandler` | `Function(String)` | required | Called when subscriber is registered |
+| `onNotificationClickedHandler` | `Function(Map<String, dynamic>)?` | null | Called when user taps a notification |
+| `handleNotificationLink` | `bool` | true | If true, SDK opens notification URL automatically. Set to false to handle links manually |
+| `isProduction` | `bool` | true | Use production API (false for staging) |
+| `isDebug` | `bool` | false | Enable debug logging |
 
 **Note: If you want to see example of integration on test app visit:** https://github.com/ppgco/flutter-example-integration
 
@@ -295,7 +353,34 @@ subprojects { subproject ->
 
 This file is placed in `android/app/src/main/`
 
-### 3.3.1 Activities (on main activity level)
+### 3.3.1 (Recommended) Add SDK meta-data to prevent cold-start crashes
+
+To prevent crashes when FCM sends `onNewToken()` before Flutter SDK initialization, add meta-data configuration:
+
+```xml
+<application ...>
+    <!-- PushPushGo SDK Configuration (prevents cold-start crash) -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.projectId" 
+        android:value="YOUR_PROJECT_ID" />
+    <meta-data 
+        android:name="com.pushpushgo.sdk.apiKey" 
+        android:value="YOUR_API_KEY" />
+    <!-- Optional: set to false for staging environment -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.isProduction" 
+        android:value="true" />
+    <!-- Optional: set to true for debug environment -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.isDebug" 
+        android:value="false" />
+    <!-- ... rest of your application -->
+</application>
+```
+
+> **Note:** Without this meta-data, on first app install the SDK might crash with `PushPushException: You have to initialize PushPushGo with context first!` if FCM triggers before Flutter initialization completes.
+
+### 3.3.2 Activities (on main activity level)
 
 ```xml
     <intent-filter>
@@ -425,13 +510,50 @@ Paste this below `com.android.library`
    * Pick JSON type and click create
    * Download file and upload it in PushPushGo Application (https://next.pushpushgo.com/projects/YourProjectID/settings/integration/fcm)
 
-# Available methods to use with this SDK
+# 4. In-App Messages
+
+PushPushGo SDK includes In-App Messages functionality that allows you to display targeted messages within your app based on routes or custom triggers.
+
+## 4.1 Quick Start
+
+```dart
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+
+// Initialize In-App Messages SDK
+await PPGInAppMessages.instance.initialize(
+  apiKey: "YOUR_API_KEY",
+  projectId: "YOUR_PROJECT_ID",
+  isProduction: true,
+  isDebug: false,
+);
+
+// Add navigator observer to track route changes
+MaterialApp(
+  navigatorObservers: [
+    InAppMessagesNavigatorObserver(),
+  ],
+  // ...
+)
+```
+
+## 4.2 Features
+
+- **Route-based messages** - Display messages when users navigate to specific screens
+- **Custom triggers** - Trigger messages based on custom events
+- **Custom code actions** - Handle button clicks with custom code handlers
+- **Multiple router support** - Works with Navigator, go_router, auto_route, Beamer
+
+📖 **For complete documentation, see [In-App Messages Guide](IN_APP_MESSAGES.md)**
+
+# 5. Available Methods
+
+## 5.1 Push Notifications
 
 ```dart
     // Subscribe for notifications
     _pushpushgo.registerForNotifications();
 
-    // Unsubscribe from notitfications
+    // Unsubscribe from notifications
     _pushpushgo.unregisterFromNotifications();
 
     // Get subscriber id
@@ -475,4 +597,31 @@ Paste this below `com.android.library`
             unassignFromGroup: "trial-users"  // groupId
         )
     );
+```
+
+## 5.2 In-App Messages
+
+```dart
+    // Initialize SDK
+    await PPGInAppMessages.instance.initialize(
+      apiKey: "API_KEY",
+      projectId: "PROJECT_ID",
+    );
+
+    // Manual route change notification
+    PPGInAppMessages.instance.onRouteChanged('/home');
+
+    // Trigger messages by custom event
+    PPGInAppMessages.instance.showMessagesOnTrigger(
+      key: "action",
+      value: "purchase_completed",
+    );
+
+    // Handle custom code actions
+    PPGInAppMessages.instance.setCustomCodeActionHandler((code) {
+      print("Custom code: $code");
+    });
+
+    // Clear message cache
+    await PPGInAppMessages.instance.clearMessageCache();
 ```

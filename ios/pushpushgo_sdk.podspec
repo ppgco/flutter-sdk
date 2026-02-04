@@ -17,6 +17,7 @@ Pod::Spec.new do |s|
   s.source_files = 'pushpushgo_sdk/Sources/pushpushgo_sdk/**/*'
   s.dependency 'Flutter'
   s.dependency 'PPG_framework'
+  s.dependency 'PPG_InAppMessages'
   s.platform = :ios, '14.0'
 
   # Flutter.framework does not contain a i386 slice.

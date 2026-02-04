@@ -1,3 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.pushpushgo.pushpushgo_sdk">
+  
+  <application>
+    <!-- ContentProvider for early PushPushGo SDK initialization (prevents FCM onNewToken crash) -->
+    <provider
+      android:name=".PushPushGoContentProvider"
+      android:authorities="${applicationId}.pushpushgo.sdk.provider"
+      android:exported="false"
+      android:initOrder="101" />
+      
+    <!-- ContentProvider for early InAppMessagesSDK initialization -->
+    <provider
+      android:name=".InAppMessagesContentProvider"
+      android:authorities="${applicationId}.pushpushgo.inappmessages.provider"
+      android:exported="false"
+      android:initOrder="100" />
+  </application>
+  
 </manifest>
