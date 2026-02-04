@@ -144,7 +144,7 @@ await pushpushgo.initialize(
 
 Add to `target 'Runner' do` at the end of the declaration:
 ```pod
-  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '3.0.3'
+  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.2.0'
 ```
 
 After that, in terminal, navigate to yourFlutterProject/ios/ and run:
@@ -256,7 +256,7 @@ $ pod install
   target 'NSE' do
     use_frameworks!
     use_modular_headers!
-    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '3.0.3'
+    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.2.0'
   end
   ```
 - Run:

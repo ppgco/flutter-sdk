@@ -1,8 +1,8 @@
 PODS:
   - Flutter (1.0.0)
-  - PPG_framework (4.1.2)
-  - PPG_InAppMessages (4.1.2)
-  - pushpushgo_sdk (1.2.3):
+  - PPG_framework (4.2.0)
+  - PPG_InAppMessages (4.1.3)
+  - pushpushgo_sdk (1.3.2):
     - Flutter
     - PPG_framework
     - PPG_InAppMessages

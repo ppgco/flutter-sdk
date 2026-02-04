@@ -11,7 +11,7 @@ let package = Package(
         .library(name: "pushpushgo-sdk", targets: ["pushpushgo_sdk"])
     ],
     dependencies: [
-        .package(url: "https://github.com/ppgco/ios-sdk.git", from: "4.1.2")
+        .package(url: "https://github.com/ppgco/ios-sdk.git", from: "4.2.0")
     ],
     targets: [
         .target(
