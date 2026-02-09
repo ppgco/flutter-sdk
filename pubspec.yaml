@@ -1,6 +1,6 @@
 name: pushpushgo_sdk
 description: PushPushGo SDK for Flutter
-version: 1.3.2
+version: 1.3.3
 repository: https://github.com/ppgco/flutter-sdk
 
 environment:

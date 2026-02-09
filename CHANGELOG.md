@@ -105,3 +105,9 @@ Update Android SDK to 3.0.2
   - New `assignToGroup` property in Beacon for assigning subscribers to dynamic groups
   - New `unassignFromGroup` property in Beacon for unassigning subscribers from dynamic groups
   - Requires ios-sdk 4.2.0+ and android-sdk 3.1.0+
+
+## 1.3.3
+### Bug Fixes
+- **Android: Fix release build crash (R8/ProGuard)** - Added consumer ProGuard rules for Huawei HMS classes
+  - Fixes `Missing class com.huawei.agconnect.AGConnectOptions` and related R8 errors during release build
+  - Apps using only GMS (without HMS) no longer fail on `minifyReleaseWithR8`

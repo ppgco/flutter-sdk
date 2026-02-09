@@ -476,7 +476,7 @@ Add dependencies in build.gradle (app level)
 // build.gradle (:app)
 dependencies {  
     ...  
-    implementation "com.github.ppgco.android-sdk:sdk:2.2.4"
+    implementation "com.github.ppgco.android-sdk:sdk:3.1.0"
     implementation platform('com.google.firebase:firebase-bom:33.16.0')
     implementation 'com.google.firebase:firebase-messaging'
 }
@@ -487,7 +487,7 @@ dependencies {
 ```groovy
 dependencies {
   ...
-    implementation "com.github.ppgco.android-sdk:sdk:2.2.4"
+    implementation "com.github.ppgco.android-sdk:sdk:3.1.0"
     implementation 'com.huawei.agconnect:agconnect-core:1.7.0.300'
     implementation 'com.huawei.hms:push:6.5.0.300'  
 }
