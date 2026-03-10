@@ -340,7 +340,7 @@ The `PPG_InAppMessages` pod is automatically included when you add `pushpushgo_s
 If using manual CocoaPods integration, add to your `Podfile`:
 
 ```ruby
-pod 'PPG_InAppMessages', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.1.3'
+pod 'PPG_InAppMessages', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.2.1'
 ```
 
 ### Swift Package Manager
