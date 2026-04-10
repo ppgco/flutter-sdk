@@ -111,3 +111,9 @@ Update Android SDK to 3.0.2
 - **Android: Fix release build crash (R8/ProGuard)** - Added consumer ProGuard rules for Huawei HMS classes
   - Fixes `Missing class com.huawei.agconnect.AGConnectOptions` and related R8 errors during release build
   - Apps using only GMS (without HMS) no longer fail on `minifyReleaseWithR8`
+
+## 1.3.4
+### Bug Fixes
+- **Android: Fix in-app messages not displaying** - Fixed `currentActivity` being null in `InAppUIController` when SDK is initialized from Dart (after the first `Activity.onResume`). The SDK registers `ActivityLifecycleCallbacks` too late to capture the initial resume, so the current activity is now injected directly via reflection at initialization time and before each trigger/route change.
+- **Android: Fix Kotlin 2.x compilation error** - Fixed `onSuccess` signature in `PushpushgoSdkPlugin` to match updated interface definition
+
