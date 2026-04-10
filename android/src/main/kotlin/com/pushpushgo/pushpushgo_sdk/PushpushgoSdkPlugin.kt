@@ -249,7 +249,7 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
       }
       MethodIdentifier.registerForNotifications -> {
         Futures.addCallback(PushPushGo.getInstance().createSubscriber(), object : FutureCallback<String> {
-          override fun onSuccess(sub: String?) {
+          override fun onSuccess(sub: String) {
             result.success("success")
             channel.invokeMethod(MethodIdentifier.onNewSubscription.toString(), sub)
           }

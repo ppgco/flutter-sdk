@@ -51,7 +51,7 @@ class PushPushGoContentProvider : ContentProvider() {
                 ctx.packageManager
                     .getApplicationInfo(ctx.packageName, PackageManager.GET_META_DATA)
                     .metaData
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             }
             
@@ -74,8 +74,8 @@ class PushPushGoContentProvider : ContentProvider() {
                 val creds = prefs.getCredentials(ctx)
                 
                 if (creds["apiToken"] != "" && creds["projectId"] != "") {
-                    projectId = creds["projectId"] as? String
-                    apiKey = creds["apiToken"] as? String
+                    projectId = creds["projectId"]
+                    apiKey = creds["apiToken"]
                     isProduction = prefs.getIsProduction(ctx)
                     isDebug = prefs.getIsDebug(ctx)
                     Log.d(TAG, "Using credentials from SharedPreferences")

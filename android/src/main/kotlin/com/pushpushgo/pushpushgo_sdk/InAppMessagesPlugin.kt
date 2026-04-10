@@ -83,6 +83,7 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
             // Check if SDK was already initialized by ContentProvider
             if (InAppMessagesContentProvider.isEarlyInitialized) {
                 Log.d(TAG, "InAppMessagesSDK already initialized by ContentProvider")
+                activity?.let { injectCurrentActivity(it) }
                 result.success("success")
                 return
             }
@@ -106,6 +107,10 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
                 baseUrl = baseUrl
             )
 
+            // Activity resumed before SDK registered its ActivityLifecycleCallbacks.
+            // Directly inject the current activity so messages can be displayed immediately.
+            activity?.let { injectCurrentActivity(it) }
+
             Log.d(TAG, "InAppMessagesSDK initialized from Dart")
             result.success("success")
         } catch (e: Exception) {
@@ -119,6 +124,7 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
             val route = call.argument<String>("route")
                 ?: return result.error("INVALID_ARGUMENTS", "route is required", null)
 
+            activity?.let { injectCurrentActivity(it) }
             InAppMessagesSDK.getInstance().showActiveMessages(route)
             result.success(null)
         } catch (e: Exception) {
@@ -134,6 +140,7 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
             val value = call.argument<String>("value")
                 ?: return result.error("INVALID_ARGUMENTS", "value is required", null)
 
+            activity?.let { injectCurrentActivity(it) }
             InAppMessagesSDK.getInstance().showMessagesOnTrigger(key, value)
             result.success(null)
         } catch (e: Exception) {
@@ -189,6 +196,7 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
         Log.d(TAG, "Activity attached: ${activity?.javaClass?.simpleName}")
+        activity?.let { injectCurrentActivity(it) }
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -202,5 +210,22 @@ class InAppMessagesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Even
 
     override fun onDetachedFromActivity() {
         activity = null
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun injectCurrentActivity(act: Activity) {
+        if (act.isFinishing) return
+        try {
+            val sdk = InAppMessagesSDK.getInstance()
+            val sdkField = sdk.javaClass.getDeclaredField("uiController")
+            sdkField.isAccessible = true
+            val uiController = sdkField.get(sdk) ?: return
+            val actField = uiController.javaClass.getDeclaredField("currentActivity")
+            actField.isAccessible = true
+            actField.set(uiController, java.lang.ref.WeakReference(act))
+            Log.d(TAG, "Injected currentActivity: ${act.javaClass.simpleName}")
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not inject currentActivity: ${e.message}")
+        }
     }
 }
