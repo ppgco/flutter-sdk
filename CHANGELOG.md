@@ -117,3 +117,8 @@ Update Android SDK to 3.0.2
 - **Android: Fix in-app messages not displaying** - Fixed `currentActivity` being null in `InAppUIController` when SDK is initialized from Dart (after the first `Activity.onResume`). The SDK registers `ActivityLifecycleCallbacks` too late to capture the initial resume, so the current activity is now injected directly via reflection at initialization time and before each trigger/route change.
 - **Android: Fix Kotlin 2.x compilation error** - Fixed `onSuccess` signature in `PushpushgoSdkPlugin` to match updated interface definition
 
+## 1.3.5
+### Bug Fixes
+- **Android: Fix missing click events when `handleNotificationLink: false`** - Notification click tracking (`handleBackgroundNotificationClick`) was incorrectly gated by the `handleNotificationLink` flag in `PushPushGoHelpers.onCreate`/`onNewIntent`, so apps that opted out of native link opening to handle deeplinks themselves stopped reporting click events to PPG entirely. Click tracking is now always invoked; the `handleNotificationLink` flag continues to control only whether the native SDK opens the URL (via the no-op `notificationHandler` override).
+- **Android: Apply `notificationHandler` override in early init paths** - The no-op handler is now also applied from `PushPushGoContentProvider` and `PushPushGoHelpers.initialize` based on the persisted flag, so link opening stays suppressed even on cold-starts triggered by a notification click before the Flutter side initializes.
+

@@ -100,7 +100,12 @@ class PushPushGoContentProvider : ContentProvider() {
                 isProduction = isProduction,
                 isDebug = isDebug
             )
-            
+
+            // Apply notification link handler override based on persisted flag,
+            // so that link opening is suppressed even if the app is woken up
+            // by a notification click before Flutter side initializes.
+            PushPushGoHelpers.applyNotificationLinkHandlerOverride(ctx)
+
             isEarlyInitialized = true
             Log.d(TAG, "PushPushGo SDK early initialization complete")
             
