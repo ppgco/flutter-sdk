@@ -8,9 +8,9 @@ import 'package:pushpushgo_sdk/ppg_inappmessages_channel.dart';
 typedef CustomCodeActionHandler = void Function(String customCode);
 
 /// PushPushGo In-App Messages SDK for Flutter
-/// 
+///
 /// Use this class to display in-app messages in your Flutter app.
-/// 
+///
 /// Example:
 /// ```dart
 /// // Initialize in your app
@@ -18,10 +18,10 @@ typedef CustomCodeActionHandler = void Function(String customCode);
 ///   apiKey: 'your-api-key',
 ///   projectId: 'your-project-id',
 /// );
-/// 
+///
 /// // Notify route changes
 /// PPGInAppMessages.instance.onRouteChanged('home');
-/// 
+///
 /// // Show messages on custom triggers
 /// PPGInAppMessages.instance.showMessagesOnTrigger(
 ///   key: 'purchase_completed',
@@ -45,7 +45,7 @@ class PPGInAppMessages {
 
   /// Check if SDK is initialized
   bool get isInitialized => _isInitialized;
-  
+
   /// Buffer a route change that occurred before initialization
   /// Called by NavigatorObserver when SDK is not yet initialized
   void bufferRoute(String route) {
@@ -53,9 +53,9 @@ class PPGInAppMessages {
   }
 
   /// Initialize the In-App Messages SDK
-  /// 
+  ///
   /// Must be called before using any other methods.
-  /// 
+  ///
   /// Parameters:
   /// - [apiKey]: Your PushPushGo API key
   /// - [projectId]: Your PushPushGo project ID
@@ -84,7 +84,7 @@ class PPGInAppMessages {
       );
       _isInitialized = true;
       log('PPGInAppMessages: Initialized successfully');
-      
+
       // Process any buffered route from NavigatorObserver
       if (_pendingRoute != null) {
         await onRouteChanged(_pendingRoute!);
@@ -97,10 +97,10 @@ class PPGInAppMessages {
   }
 
   /// Notify the SDK about a route/screen change
-  /// 
+  ///
   /// Call this when the user navigates to a new screen.
   /// The SDK will check for eligible messages to display.
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// PPGInAppMessages.instance.onRouteChanged('home');
@@ -108,7 +108,7 @@ class PPGInAppMessages {
   /// ```
   Future<void> onRouteChanged(String route) async {
     _checkInitialized();
-    
+
     try {
       await InAppMessagesChannel.invokeMethod(
         method: InAppMethod.onRouteChanged,
@@ -120,13 +120,13 @@ class PPGInAppMessages {
   }
 
   /// Show messages matching a custom trigger
-  /// 
+  ///
   /// Use this to display messages based on custom events in your app.
-  /// 
+  ///
   /// Parameters:
   /// - [key]: The trigger key (e.g., 'purchase_completed', 'level_up')
   /// - [value]: The trigger value (e.g., 'product_123', '10')
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// // After purchase
@@ -134,7 +134,7 @@ class PPGInAppMessages {
   ///   key: 'purchase_completed',
   ///   value: 'order_123',
   /// );
-  /// 
+  ///
   /// // On level completion
   /// PPGInAppMessages.instance.showMessagesOnTrigger(
   ///   key: 'level_completed',
@@ -146,7 +146,7 @@ class PPGInAppMessages {
     required String value,
   }) async {
     _checkInitialized();
-    
+
     try {
       await InAppMessagesChannel.invokeMethod(
         method: InAppMethod.showMessagesOnTrigger,
@@ -161,10 +161,10 @@ class PPGInAppMessages {
   }
 
   /// Set a handler for custom code actions
-  /// 
+  ///
   /// When a user clicks a button with a custom code action (JS type),
   /// your handler will be called with the custom code string.
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// PPGInAppMessages.instance.setCustomCodeActionHandler((code) {
@@ -178,7 +178,7 @@ class PPGInAppMessages {
   void setCustomCodeActionHandler(CustomCodeActionHandler handler) {
     _customCodeHandler = handler;
     _setupEventListening();
-    
+
     // Notify native side that we want to receive events
     InAppMessagesChannel.invokeMethod(
       method: InAppMethod.setCustomCodeActionHandler,
@@ -189,14 +189,14 @@ class PPGInAppMessages {
   }
 
   /// Clear the message cache
-  /// 
+  ///
   /// Forces fresh data fetch on next API call.
   /// Useful for testing or troubleshooting.
-  /// 
+  ///
   /// Note: This method is only available on iOS.
   Future<void> clearMessageCache() async {
     _checkInitialized();
-    
+
     try {
       await InAppMessagesChannel.invokeMethod(
         method: InAppMethod.clearMessageCache,
@@ -211,14 +211,16 @@ class PPGInAppMessages {
   void _setupEventListening() {
     // Cancel existing subscription if any
     _eventSubscription?.cancel();
-    
+
     _eventSubscription = InAppMessagesChannel.eventStream.listen(
       (event) {
         if (event is Map) {
           final type = event['type'] as String?;
           final code = event['code'] as String?;
-          
-          if (type == 'customCode' && code != null && _customCodeHandler != null) {
+
+          if (type == 'customCode' &&
+              code != null &&
+              _customCodeHandler != null) {
             // Delay handler call to next frame to ensure UI is ready
             final binding = WidgetsBinding.instance;
             if (binding.hasScheduledFrame) {

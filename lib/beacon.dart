@@ -66,14 +66,14 @@ class Beacon {
       'selectors': selectors,
       'customId': customId,
     };
-    
+
     if (assignToGroup != null) {
       data['assignToGroup'] = assignToGroup;
     }
     if (unassignFromGroup != null) {
       data['unassignFromGroup'] = unassignFromGroup;
     }
-    
+
     return jsonEncode(data);
   }
 }

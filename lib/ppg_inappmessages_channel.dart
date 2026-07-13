@@ -2,16 +2,18 @@ import 'package:flutter/services.dart';
 
 /// Channel for In-App Messages communication with native platforms
 class InAppMessagesChannel {
-  static const String _methodChannelName = 'com.pushpushgo/inappmessages/methods';
+  static const String _methodChannelName =
+      'com.pushpushgo/inappmessages/methods';
   static const String _eventChannelName = 'com.pushpushgo/inappmessages/events';
-  
+
   static const Duration _channelTimeout = Duration(seconds: 15);
-  
+
   static const MethodChannel _methodChannel = MethodChannel(_methodChannelName);
   static const EventChannel _eventChannel = EventChannel(_eventChannelName);
 
   /// Get the event channel stream for receiving events from native
-  static Stream<dynamic> get eventStream => _eventChannel.receiveBroadcastStream();
+  static Stream<dynamic> get eventStream =>
+      _eventChannel.receiveBroadcastStream();
 
   /// Invoke a method on the native side
   static Future<T?> invokeMethod<T>({

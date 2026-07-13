@@ -11,14 +11,12 @@ export 'package:pushpushgo_sdk/ppg_inappmessages_observer.dart';
 
 typedef MessageHandler = Function(Map<String, dynamic> message);
 typedef SubscriptionHandler = Function(String serializedJSON);
-typedef NotificationClickHandler = Function(Map<String, dynamic> notificationData);
+typedef NotificationClickHandler = Function(
+    Map<String, dynamic> notificationData);
 
 typedef PpgOptions = Map<String, String>;
 
-enum ResponseStatus {
-  success,
-  error
-}
+enum ResponseStatus { success, error }
 
 class PushpushgoSdk {
   PpgOptions options;
@@ -46,16 +44,15 @@ class PushpushgoSdk {
     _onNotificationClickedHandler = onNotificationClickedHandler;
 
     CommonChannel.setMethodCallHandler(_handleChannelMethodCallback);
-    
+
     final Map<String, dynamic> initOptions = Map<String, dynamic>.from(options);
     initOptions['handleNotificationLink'] = handleNotificationLink.toString();
     initOptions['isProduction'] = isProduction;
     initOptions['isDebug'] = isDebug;
-    
+
     return CommonChannel.invokeMethod<void>(
-      method: ChannelMethod.initialize,
-      arguments: initOptions
-    ).catchError(
+            method: ChannelMethod.initialize, arguments: initOptions)
+        .catchError(
       (error) {
         if (error is! TimeoutException) throw error;
       },
@@ -96,9 +93,7 @@ class PushpushgoSdk {
 
   Future<String?> sendBeacon(Beacon beaconData) async {
     return CommonChannel.invokeMethod<String>(
-      method: ChannelMethod.sendBeacon,
-      arguments: beaconData.serialize()
-    );
+        method: ChannelMethod.sendBeacon, arguments: beaconData.serialize());
   }
 
   // From native to dart
@@ -106,15 +101,15 @@ class PushpushgoSdk {
     String method = call.method;
 
     dynamic arguments = call.arguments;
-    
+
     if (method == ChannelMethod.onNewSubscription.name) {
       return _onNewSubscriptionHandler(arguments ?? "");
     }
 
     if (method == ChannelMethod.onNotificationClicked.name) {
       if (_onNotificationClickedHandler != null) {
-        final Map<String, dynamic> data = arguments is Map 
-            ? Map<String, dynamic>.from(arguments) 
+        final Map<String, dynamic> data = arguments is Map
+            ? Map<String, dynamic>.from(arguments)
             : <String, dynamic>{};
         return _onNotificationClickedHandler!(data);
       }

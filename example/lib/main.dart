@@ -19,12 +19,12 @@ class MyApp extends StatefulWidget {
 
 // Global keys for navigation and snackbar from custom code handler
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 class _MyAppState extends State<MyApp> {
-  
   final _pushpushgo = PushpushgoSdk({
-    "apiToken": "YOUR_API_KEY", 
+    "apiToken": "YOUR_API_KEY",
     "projectId": "YOUR_PROJECT_ID",
     "appGroupId": "group.ppg.fluttersdk"
   });
@@ -54,7 +54,7 @@ class _MyAppState extends State<MyApp> {
       // Set to false to disable automatic URL opening on notification click
       // When false, you handle the link manually in onNotificationClickedHandler
       handleNotificationLink: false,
-      isProduction: false,  // Use staging API (api.master1.qappg.co)
+      isProduction: false, // Use staging API (api.master1.qappg.co)
       isDebug: true,
     );
 
@@ -70,7 +70,7 @@ class _MyAppState extends State<MyApp> {
     await PPGInAppMessages.instance.initialize(
       apiKey: "YOUR_API_KEY",
       projectId: "YOUR_PROJECT_ID",
-      isProduction: false,  // Use staging API (api.master1.qappg.co)
+      isProduction: false, // Use staging API (api.master1.qappg.co)
       isDebug: true,
     );
 
@@ -90,12 +90,12 @@ class _MyAppState extends State<MyApp> {
         // Navigate to details screen
         navigatorKey.currentState?.pushNamed('/details');
         break;
-      
+
       case 'navigate_home':
         // Navigate back to home
         navigatorKey.currentState?.popUntil((route) => route.isFirst);
         break;
-      
+
       case 'show_snackbar':
         // Show a snackbar message
         scaffoldMessengerKey.currentState?.showSnackBar(
@@ -106,7 +106,7 @@ class _MyAppState extends State<MyApp> {
           ),
         );
         break;
-      
+
       case 'show_promo':
         // Show promotional snackbar
         scaffoldMessengerKey.currentState?.showSnackBar(
@@ -117,7 +117,7 @@ class _MyAppState extends State<MyApp> {
           ),
         );
         break;
-      
+
       case 'show_dialog':
         // Show a dialog
         final context = navigatorKey.currentContext;
@@ -126,7 +126,8 @@ class _MyAppState extends State<MyApp> {
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Custom Action'),
-              content: const Text('This dialog was triggered by an In-App Message custom code action.'),
+              content: const Text(
+                  'This dialog was triggered by an In-App Message custom code action.'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -137,7 +138,7 @@ class _MyAppState extends State<MyApp> {
           );
         }
         break;
-      
+
       default:
         // Unknown code - show info snackbar
         scaffoldMessengerKey.currentState?.showSnackBar(
@@ -171,7 +172,7 @@ class HomeScreen extends StatefulWidget {
   final PushpushgoSdk pushpushgo;
 
   const HomeScreen({
-    super.key, 
+    super.key,
     required this.pushpushgo,
   });
 
@@ -206,10 +207,13 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               children: [
                 Icon(
-                  _statusColor == Colors.green ? Icons.check_circle :
-                  _statusColor == Colors.red ? Icons.error :
-                  _statusColor == Colors.orange ? Icons.hourglass_empty :
-                  Icons.info,
+                  _statusColor == Colors.green
+                      ? Icons.check_circle
+                      : _statusColor == Colors.red
+                          ? Icons.error
+                          : _statusColor == Colors.orange
+                              ? Icons.hourglass_empty
+                              : Icons.info,
                   color: _statusColor,
                 ),
                 const SizedBox(width: 12),
@@ -225,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          
+
           // Scrollable content
           Expanded(
             child: SingleChildScrollView(
@@ -234,7 +238,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Navigation section
-                  const Text("Navigation", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text("Navigation",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     child: const Text("Go to detail screen"),
@@ -245,22 +251,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           builder: (context) => const DetailScreen(),
                         ),
                       );
-                      _updateStatus("Navigated to /details", color: Colors.blue);
+                      _updateStatus("Navigated to /details",
+                          color: Colors.blue);
                     },
                   ),
-                  
+
                   const Divider(height: 32),
-                  
+
                   // Push Notifications section
-                  const Text("Push Notifications", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text("Push Notifications",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     child: const Text("Register for notifications"),
                     onPressed: () async {
-                      _updateStatus("⏳ Registering for notifications...", color: Colors.orange);
-                      var result = await widget.pushpushgo.registerForNotifications();
+                      _updateStatus("⏳ Registering for notifications...",
+                          color: Colors.orange);
+                      var result =
+                          await widget.pushpushgo.registerForNotifications();
                       if (result == ResponseStatus.success) {
-                        _updateStatus("✅ Registered successfully!\nPush notifications enabled.", color: Colors.green);
+                        _updateStatus(
+                            "✅ Registered successfully!\nPush notifications enabled.",
+                            color: Colors.green);
                       } else {
                         _updateStatus(
                           "❌ Registration failed\n"
@@ -277,10 +290,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ElevatedButton(
                     child: const Text("Unregister from notifications"),
                     onPressed: () async {
-                      _updateStatus("⏳ Unregistering from notifications...", color: Colors.orange);
-                      var result = await widget.pushpushgo.unregisterFromNotifications();
+                      _updateStatus("⏳ Unregistering from notifications...",
+                          color: Colors.orange);
+                      var result =
+                          await widget.pushpushgo.unregisterFromNotifications();
                       if (result == ResponseStatus.success) {
-                        _updateStatus("✅ Unregistered successfully!\nPush notifications disabled.", color: Colors.green);
+                        _updateStatus(
+                            "✅ Unregistered successfully!\nPush notifications disabled.",
+                            color: Colors.green);
                       } else {
                         _updateStatus(
                           "❌ Unregistration failed\n"
@@ -294,13 +311,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ElevatedButton(
                     child: const Text("Get subscriber ID"),
                     onPressed: () async {
-                      _updateStatus("⏳ Getting subscriber ID...", color: Colors.orange);
+                      _updateStatus("⏳ Getting subscriber ID...",
+                          color: Colors.orange);
                       var result = await widget.pushpushgo.getSubscriberId();
                       if (result != null && result.isNotEmpty) {
-                        _updateStatus("📋 Subscriber ID:\n$result", color: Colors.blue);
+                        _updateStatus("📋 Subscriber ID:\n$result",
+                            color: Colors.blue);
                         log('Subscriber ID: $result');
                       } else {
-                        _updateStatus("⚠️ No subscriber ID (not registered)", color: Colors.orange);
+                        _updateStatus("⚠️ No subscriber ID (not registered)",
+                            color: Colors.orange);
                       }
                     },
                   ),
@@ -308,24 +328,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   ElevatedButton(
                     child: const Text("Send beacon"),
                     onPressed: () async {
-                      _updateStatus("⏳ Sending beacon with tags and selectors...", color: Colors.orange);
+                      _updateStatus(
+                          "⏳ Sending beacon with tags and selectors...",
+                          color: Colors.orange);
                       var result = await widget.pushpushgo.sendBeacon(Beacon(
-                        tags: {
-                          Tag.fromString("my:tag"),
-                          Tag(
-                            key: "test_key",
-                            value: "test_value",
-                            strategy: "append",
-                            ttl: 1000
-                          )
-                        },
-                        tagsToDelete: {},
-                        customId: "flutter_test_user",
-                        selectors: {
-                          "platform": "flutter",
-                          "test": "true"
-                        }
-                      ));
+                          tags: {
+                            Tag.fromString("my:tag"),
+                            Tag(
+                                key: "test_key",
+                                value: "test_value",
+                                strategy: "append",
+                                ttl: 1000)
+                          },
+                          tagsToDelete: {},
+                          customId: "flutter_test_user",
+                          selectors: {"platform": "flutter", "test": "true"}));
                       if (result != null) {
                         _updateStatus(
                           "✅ Beacon sent successfully!\n"
@@ -347,11 +364,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
                     },
                   ),
-                  
+
                   const Divider(height: 32),
-                  
+
                   // In-App Messages section
-                  const Text("In-App Messages", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text("In-App Messages",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     child: const Text("Trigger custom action"),
