@@ -126,3 +126,7 @@ Update Android SDK to 3.0.2
 ### Bug Fixes
 - **Android: Fix cold-start crash on FCM callbacks (`PushPushException: You have to initialize PushPushGo with context first!`)** - Bumped native android-sdk from 3.1.0 to 3.2.0. In 3.1.0 the internal `logDebug()` called `PushPushGo.getInstance()` without an initialization guard, so any FCM callback (`onNewToken`/`onMessageReceived`) arriving before SDK initialization crashed the app before the `isInitialized()` check could run - typically on the first launch after a fresh install, when SharedPreferences are still empty and AndroidManifest meta-data credentials are not configured. FCM callbacks arriving before initialization are now safely ignored. Configuring the AndroidManifest meta-data is still recommended so that pushes received on cold start are actually displayed.
 
+
+## 1.3.7
+### Bug Fixes
+- **iOS: Fix notification click not delivered on cold start** - The `UNUserNotificationCenter` delegate was registered only during `initialize()` (called from Dart after the Flutter engine starts), which is after the app finishes launching - too late for iOS to reliably deliver the tap that launched the app. As a result, `onNotificationClickedHandler` (and native link opening) did not fire when the app was fully closed. The delegate is now registered at plugin registration time (during `didFinishLaunching`), and a tap that arrives before `initialize()` completes is cached natively and replayed right after initialization.

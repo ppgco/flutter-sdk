@@ -17,6 +17,8 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
   private var channel: FlutterMethodChannel?
   private var application: UIApplication?
   private var handleNotificationLink: Bool = true
+  private var isInitialized: Bool = false
+  private var pendingNotificationResponse: UNNotificationResponse?
   
   static var instance: PushpushgoSdkPlugin?
   
@@ -29,6 +31,11 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     instance.channel = channel
     registrar.addApplicationDelegate(instance)
     registrar.addMethodCallDelegate(instance, channel: channel)
+
+    // iOS delivers the tap that launched the app only if the delegate is set
+    // before the app finishes launching; processing is deferred until
+    // initialize() provides the SDK configuration and the Dart handler.
+    UNUserNotificationCenter.current().delegate = instance
     
     // Register In-App Messages plugin
     InAppMessagesPlugin.register(with: registrar)
@@ -208,7 +215,14 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     
     UNUserNotificationCenter.current().delegate = PushpushgoSdkPlugin.instance
     PPG.initializeNotifications(projectId: projectId, apiToken: apiToken, appGroupId: appGroupId)
-    
+
+    // Replay a notification tap that launched the app before initialization
+    isInitialized = true
+    if let pendingResponse = pendingNotificationResponse {
+      pendingNotificationResponse = nil
+      processNotificationResponse(pendingResponse)
+    }
+
     return callback("success")
   }
 
@@ -286,6 +300,19 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
             @escaping () -> Void) {
     print("userNotificationCenter.didReceive")
 
+    if !isInitialized {
+      // Cold-start tap: handleNotificationLink is not parsed yet and the Dart
+      // handler is not registered — replayed from onInitialize.
+      pendingNotificationResponse = response
+      completionHandler()
+      return
+    }
+
+    processNotificationResponse(response)
+    completionHandler()
+  }
+
+  private func processNotificationResponse(_ response: UNNotificationResponse) {
     let actionIdentifier = response.actionIdentifier
     // Handle the action
     if actionIdentifier == UNNotificationDefaultActionIdentifier {
@@ -333,9 +360,8 @@ extension PushpushgoSdkPlugin: UNUserNotificationCenterDelegate {
           #endif
       }
     }
-    completionHandler()
   }
-  
+
   public func userNotificationCenter(_ center: UNUserNotificationCenter, didDismissNotification notification: UNNotification) {
       print("userNotificationCenter.didDismissNotification")
   }
