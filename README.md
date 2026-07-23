@@ -76,8 +76,8 @@ import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
       // Optional: Handle notification clicks in Flutter
       onNotificationClickedHandler: (notificationData) {
         print("Notification clicked: $notificationData");
-        // Navigate based on notification data
-        final link = notificationData['link'] as String?;
+        // The payload shape differs between Android and iOS - see section 1.2.2
+        final link = getNotificationLink(notificationData);
         if (link != null) {
           // Handle deep linking or navigation
         }
@@ -100,17 +100,10 @@ await pushpushgo.initialize(
     print(subscriberId);
   },
   onNotificationClickedHandler: (notificationData) {
-    // notificationData contains all push payload fields including:
-    // - 'link' - the URL configured in the notification
-    // - 'campaign' - campaign ID
-    // - 'project' - project ID
-    // - 'title', 'body' - notification content (iOS only)
-    // - Custom data fields
-    
     print("Notification data: $notificationData");
-    
-    // Example: Navigate to specific screen based on link
-    final link = notificationData['link'] as String?;
+
+    // Example: Navigate to specific screen based on the click URL
+    final link = getNotificationLink(notificationData);
     if (link == 'https://example.com/promo') {
       Navigator.pushNamed(context, '/promo');
     }
@@ -120,6 +113,56 @@ await pushpushgo.initialize(
   handleNotificationLink: false,
 );
 ```
+
+**The payload shape differs between platforms:**
+
+- **Android** delivers a flat map with convenience keys such as `link`,
+  `redirectLink`, `campaign`, `project` plus any custom data fields.
+- **iOS** passes the raw APNs payload through (plus `actionIdentifier`,
+  `title`, `body` added by the plugin). There is **no flat `link` key on
+  iOS** - the click URL is nested in `aps` → `url-args` (first element) for
+  a notification-body tap, or in `actions[index]['url']` for action-button
+  taps (`button_1` → index 0, `button_2` → index 1).
+
+Use this platform-aware helper to read the click URL on both platforms:
+
+```dart
+String? getNotificationLink(Map<String, dynamic> data) {
+  // iOS: action-button tap - URL is per-button in `actions`, key is `url`
+  final actionId = data['actionIdentifier']?.toString();
+  final actions = data['actions'];
+  if (actions is List && (actionId == 'button_1' || actionId == 'button_2')) {
+    final index = actionId == 'button_1' ? 0 : 1;
+    if (index < actions.length && actions[index] is Map) {
+      final url = (actions[index] as Map)['url']?.toString();
+      if (url != null && url.isNotEmpty) return url;
+    }
+  }
+
+  // iOS: default notification-body tap - first element of aps["url-args"]
+  // Note: nested values arrive from the platform channel as
+  // Map<Object?, Object?> / List<Object?>, so use untyped `is Map` /
+  // `is List` checks - strict generic casts like `as Map<String, dynamic>`
+  // will fail.
+  final aps = data['aps'];
+  if (aps is Map) {
+    final urlArgs = aps['url-args'];
+    if (urlArgs is List && urlArgs.isNotEmpty) {
+      final first = urlArgs.first?.toString();
+      if (first != null && first.isNotEmpty) return first;
+    }
+  }
+
+  // Android: flat convenience keys
+  final link = (data['redirectLink'] ?? data['link'])?.toString();
+  if (link != null && link.trim().isNotEmpty) return link.trim();
+
+  return null;
+}
+```
+
+For the full payload reference and deep-link setup (custom URL schemes,
+Universal Links, AASA), see [DEEPLINKS.md](DEEPLINKS.md).
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
