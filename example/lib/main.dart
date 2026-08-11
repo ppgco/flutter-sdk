@@ -80,6 +80,20 @@ class _MyAppState extends State<MyApp> {
       _handleCustomCode(code);
     });
 
+    // Initialize Live Activities
+    // Credentials are reused from the push SDK; iOS additionally needs the App
+    // Group shared with the Widget Extension.
+    await PPGLiveActivities.instance.initialize(
+      appGroupId: "group.ppg.fluttersdk",
+      isProduction: false, // Use staging API (api.master1.qappg.co)
+      isDebug: true,
+    );
+
+    // Taps on the Live Activity body or its action buttons
+    PPGLiveActivities.instance.setClickHandler((click) {
+      log("LIVE ACTIVITY CLICKED: $click");
+    });
+
     if (!mounted) return;
   }
 
@@ -184,7 +198,35 @@ class _HomeScreenState extends State<HomeScreen> {
   String _statusMessage = "Ready";
   Color _statusColor = Colors.grey;
 
+  final _liveNotificationController = TextEditingController();
+  StreamSubscription<LiveActivityStatusEvent>? _liveActivitySubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Lifecycle of subscribed live notifications
+    _liveActivitySubscription =
+        PPGLiveActivities.instance.statusStream.listen((event) {
+      log("Live Activity status: $event");
+      _updateStatus(
+        "📡 Live Activity: ${event.status.name}"
+        "${event.error != null ? "\n${event.error}" : ""}",
+        color:
+            event.status == LiveActivityStatus.error ? Colors.red : Colors.teal,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _liveActivitySubscription?.cancel();
+    _liveNotificationController.dispose();
+    super.dispose();
+  }
+
   void _updateStatus(String message, {Color? color}) {
+    if (!mounted) return;
     setState(() {
       _statusMessage = message;
       _statusColor = color ?? Colors.blue;
@@ -398,6 +440,106 @@ class _HomeScreenState extends State<HomeScreen> {
                         "All cached In-App Messages have been removed.\n"
                         "Messages will be fetched again on next route change.",
                         color: Colors.grey,
+                      );
+                    },
+                  ),
+
+                  const Divider(height: 32),
+
+                  // Live Activities section
+                  const Text("Live Activities",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _liveNotificationController,
+                    decoration: const InputDecoration(
+                      labelText: "Live notification ID",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Check support"),
+                    onPressed: () async {
+                      final supported =
+                          await PPGLiveActivities.instance.isSupported();
+                      _updateStatus(
+                        supported
+                            ? "✅ Live Activities are supported on this device"
+                            : "⚠️ Live Activities not available\n"
+                                "Requires Android 16 (API 36) or iOS 17.2+,\n"
+                                "and must be enabled in system settings.",
+                        color: supported ? Colors.green : Colors.orange,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Subscribe"),
+                    onPressed: () async {
+                      final id = _liveNotificationController.text.trim();
+                      if (id.isEmpty) {
+                        _updateStatus("⚠️ Enter a live notification ID first",
+                            color: Colors.orange);
+                        return;
+                      }
+
+                      _updateStatus("⏳ Subscribing to $id...",
+                          color: Colors.orange);
+                      try {
+                        final subscriberId =
+                            await PPGLiveActivities.instance.subscribe(id);
+                        _updateStatus(
+                          "✅ Subscribed to $id"
+                          "${subscriberId != null ? "\nSubscriber: $subscriberId" : ""}",
+                          color: Colors.green,
+                        );
+                      } catch (e) {
+                        _updateStatus("❌ Subscribe failed\n$e",
+                            color: Colors.red);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Unsubscribe"),
+                    onPressed: () async {
+                      final id = _liveNotificationController.text.trim();
+                      if (id.isEmpty) {
+                        _updateStatus("⚠️ Enter a live notification ID first",
+                            color: Colors.orange);
+                        return;
+                      }
+
+                      _updateStatus("⏳ Unsubscribing from $id...",
+                          color: Colors.orange);
+                      try {
+                        await PPGLiveActivities.instance.unsubscribe(id);
+                        _updateStatus("✅ Unsubscribed from $id",
+                            color: Colors.green);
+                      } catch (e) {
+                        _updateStatus("❌ Unsubscribe failed\n$e",
+                            color: Colors.red);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("List active activities"),
+                    onPressed: () async {
+                      final activities = await PPGLiveActivities.instance
+                          .getActiveActivities();
+                      if (activities.isEmpty) {
+                        _updateStatus("ℹ️ No active Live Activities",
+                            color: Colors.grey);
+                        return;
+                      }
+
+                      _updateStatus(
+                        "📋 Active Live Activities:\n"
+                        "${activities.join("\n")}",
+                        color: Colors.teal,
                       );
                     },
                   ),

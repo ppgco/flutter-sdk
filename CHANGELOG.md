@@ -130,3 +130,13 @@ Update Android SDK to 3.0.2
 ## 1.3.7
 ### Bug Fixes
 - **iOS: Fix notification click not delivered on cold start** - The `UNUserNotificationCenter` delegate was registered only during `initialize()` (called from Dart after the Flutter engine starts), which is after the app finishes launching - too late for iOS to reliably deliver the tap that launched the app. As a result, `onNotificationClickedHandler` (and native link opening) did not fire when the app was fully closed. The delegate is now registered at plugin registration time (during `didFinishLaunching`), and a tap that arrives before `initialize()` completes is cached natively and replayed right after initialization.
+
+## 1.4.0
+### Features
+- **Live Activities** - Real-time, backend-driven notifications on both platforms: Android 16 Live Updates (`ProgressStyle`) and iOS Live Activities on the Lock Screen and Dynamic Island, with the `FOOTBALL_MATCH_TRACKING` template. New `PPGLiveActivities` API: `initialize`, `isSupported`, `subscribe`, `unsubscribe`, `getSubscriberId`, `isActive`, `getActiveActivities`, `simulatePush`, plus a `statusStream` of lifecycle events and `setClickHandler` for taps. See [Live Activities Guide](LIVE_ACTIVITIES.md).
+- **Android: No host-app code required** - The plugin intercepts Live Activity clicks on both cold start and `onNewIntent`, so unlike the native SDK integration nothing has to be added to `MainActivity`. Clicks arriving before the Flutter engine is ready are buffered and replayed. Deep link opening follows the existing `handleNotificationLink` flag.
+- **iOS: Widget Extension integration** - Live Activities are rendered by a Widget Extension in the host app, using the Lock Screen and Dynamic Island views shipped by the native SDK. The plugin reuses the App Group and credentials already configured for push notifications, handles late-join bootstrap (subscribing to an already running activity), prefetches team badges into the App Group, and handles `ppg-la://` URLs from `CLOSE` buttons. Other URLs are reported to the click handler but neither opened nor claimed, so universal links and other deep-link plugins are unaffected. A complete working example was added in `example/ios/LiveActivityWidget`.
+
+### Dependencies
+- **iOS: native ios-sdk 4.2.0 → 4.3.0** (adds the `PPG_LiveActivities` product), linked through Swift Package Manager. On CocoaPods the upstream `PPG_LiveActivities` podspec still requires iOS 17.2, which cannot be a dependency of this 14.0 pod - apps add `pod 'PPG_LiveActivities'` to their own `Podfile` to opt in. The plugin builds and runs with or without the module; without it, Live Activities report as unsupported.
+- **Android: no change** - native android-sdk 3.2.0 already ships Live Activities.

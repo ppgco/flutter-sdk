@@ -48,13 +48,21 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
   private lateinit var context: Context
   private lateinit var sharedPrefs: PpgSharedPrefs
   private val inAppMessagesPlugin = InAppMessagesPlugin()
+  private val liveActivitiesPlugin = LiveActivitiesPlugin()
   private var activity: Activity? = null
   private var pendingNotificationData: Map<String, Any?>? = null
+  private var pendingLiveActivityIntent: Intent? = null
   private var isInitialized = false
 
   companion object {
     private const val PPG_PUSH_CAMPAIGN_KEY = "campaign"
     private const val PPG_PUSH_PROJECT_KEY = "project"
+
+    // Live Activity click extras, mirroring LiveActivityHandler in the native
+    // SDK — its constants are internal to that module, so they can't be
+    // referenced directly.
+    private const val PPG_LA_ID_KEY = "live_activity_id"
+    private const val PPG_LA_ACTION_INDEX_KEY = "la_action_index"
   }
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
@@ -64,11 +72,14 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
     sharedPrefs = PpgSharedPrefs()
     // Register In-App Messages plugin
     inAppMessagesPlugin.onAttachedToEngine(flutterPluginBinding)
+    // Register Live Activities plugin
+    liveActivitiesPlugin.onAttachedToEngine(flutterPluginBinding)
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
     inAppMessagesPlugin.onDetachedFromEngine(binding)
+    liveActivitiesPlugin.onDetachedFromEngine(binding)
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -98,6 +109,8 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
 
   private fun handleIntent(intent: Intent?) {
     intent?.let {
+      handleLiveActivityIntent(it)
+
       val extras = it.extras
       if (extras != null && (extras.containsKey(PPG_PUSH_CAMPAIGN_KEY) || extras.containsKey(PPG_PUSH_PROJECT_KEY))) {
         val notificationData = mutableMapOf<String, Any?>()
@@ -124,6 +137,47 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
     pendingNotificationData?.let { data ->
       channel.invokeMethod(MethodIdentifier.onNotificationClicked.name, data)
       pendingNotificationData = null
+    }
+  }
+
+  /**
+   * Report a Live Activity click to Dart. The native SDK reports the click
+   * statistics and (unless suppressed) opens the deep link; here we only need
+   * to forward the result. Handles both cold start (onCreate) and warm start
+   * (onNewIntent), so the host app's MainActivity needs no extra code.
+   */
+  private fun handleLiveActivityIntent(intent: Intent) {
+    if (!intent.hasExtra(PPG_LA_ID_KEY)) return
+
+    // The launcher intent can arrive before the SDK is configured on the very
+    // first run; hold it until initialize() provides the credentials.
+    if (!PushPushGo.isInitialized()) {
+      pendingLiveActivityIntent = intent
+      return
+    }
+
+    processLiveActivityClick(intent)
+  }
+
+  private fun processLiveActivityClick(intent: Intent) {
+    try {
+      val liveActivityId = intent.getStringExtra(PPG_LA_ID_KEY) ?: return
+      val actionIndex = intent.getIntExtra(PPG_LA_ACTION_INDEX_KEY, -1)
+      val handleLink = sharedPrefs.getHandleNotificationLink(context)
+
+      // Clears the click extras, so the same tap is never reported twice.
+      val deepLink = PushPushGo.getInstance().handleLiveActivityClick(intent, handleLink)
+
+      liveActivitiesPlugin.sendClick(liveActivityId, deepLink, actionIndex)
+    } catch (error: Exception) {
+      Log.e("PpgPlugin", "Failed to handle Live Activity click: ${error.message}")
+    }
+  }
+
+  private fun trySendPendingLiveActivityClick() {
+    pendingLiveActivityIntent?.let { intent ->
+      pendingLiveActivityIntent = null
+      processLiveActivityClick(intent)
     }
   }
 
@@ -166,6 +220,7 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
           // Mark as initialized and send any pending notification data
           isInitialized = true
           trySendPendingNotification()
+          trySendPendingLiveActivityClick()
 
           result.success("success")
         } catch(error: Exception) {

@@ -9,6 +9,10 @@ import 'package:flutter/services.dart';
 export 'package:pushpushgo_sdk/ppg_inappmessages.dart';
 export 'package:pushpushgo_sdk/ppg_inappmessages_observer.dart';
 
+// Live Activities exports
+export 'package:pushpushgo_sdk/ppg_liveactivities.dart';
+export 'package:pushpushgo_sdk/ppg_liveactivities_models.dart';
+
 typedef MessageHandler = Function(Map<String, dynamic> message);
 typedef SubscriptionHandler = Function(String serializedJSON);
 typedef NotificationClickHandler = Function(

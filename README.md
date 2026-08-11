@@ -5,6 +5,10 @@
 Official PushPushGo SDK client for Flutter apps (iOS, Android)
 
 > [!IMPORTANT]
+> **New in v1.4.0:**
+>
+> - **Live Activities** - Real-time notifications driven by the backend: Android 16 Live Updates and iOS Live Activities on the Lock Screen and Dynamic Island. See [Live Activities Documentation](LIVE_ACTIVITIES.md) for details.
+>
 > **New in v1.3.0:**
 >
 > - **In-App Messages** - Display targeted messages within your app based on routes or custom triggers. See [In-App Messages Documentation](IN_APP_MESSAGES.md) for details.
@@ -588,9 +592,50 @@ MaterialApp(
 
 📖 **For complete documentation, see [In-App Messages Guide](IN_APP_MESSAGES.md)**
 
-# 5. Available Methods
+# 5. Live Activities
 
-## 5.1 Push Notifications
+Live Activities are real-time, continuously updated notifications driven entirely by the PushPushGo backend — an Android 16 Live Update notification, or an iOS Live Activity on the Lock Screen and Dynamic Island. Your app only chooses which live notification to follow; score, phase and timing updates arrive as pushes and are rendered by the native SDK.
+
+## 5.1 Quick Start
+
+```dart
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+
+// Call after PushpushgoSdk.initialize() — credentials are reused from it.
+// appGroupId is required on iOS and ignored on Android.
+await PPGLiveActivities.instance.initialize(
+  appGroupId: "group.com.your.app",
+);
+
+// Follow lifecycle events
+PPGLiveActivities.instance.statusStream.listen((event) {
+  print("Live Activity: ${event.status}");
+});
+
+// Subscribe when the user chooses to follow a match
+if (await PPGLiveActivities.instance.isSupported()) {
+  await PPGLiveActivities.instance.subscribe("<liveNotificationId>");
+}
+```
+
+## 5.2 Requirements
+
+| | Android | iOS |
+|---|---|---|
+| Minimum OS | Android 16 (API 36) | iOS 17.2 |
+| Extra setup in your app | **none** | App Group + Widget Extension |
+| Integration path | any | Swift Package Manager (CocoaPods needs a manual `pod` entry) |
+
+On Android there is nothing to add — not even to `MainActivity`; the plugin handles Live Activity taps on both cold and warm start. On iOS the Live Activity is rendered by a Widget Extension you add once in Xcode; the Lock Screen and Dynamic Island views ship with the SDK.
+
+> [!WARNING]
+> On unsupported devices every method is safe to call and does nothing. Always gate your UI on `isSupported()`.
+
+📖 **For complete documentation, including the iOS Widget Extension setup, see [Live Activities Guide](LIVE_ACTIVITIES.md)**
+
+# 6. Available Methods
+
+## 6.1 Push Notifications
 
 ```dart
     // Subscribe for notifications
@@ -642,7 +687,7 @@ MaterialApp(
     );
 ```
 
-## 5.2 In-App Messages
+## 6.2 In-App Messages
 
 ```dart
     // Initialize SDK
@@ -667,4 +712,37 @@ MaterialApp(
 
     // Clear message cache
     await PPGInAppMessages.instance.clearMessageCache();
+```
+
+## 6.3 Live Activities
+
+```dart
+    // Initialize (after PushpushgoSdk.initialize)
+    await PPGLiveActivities.instance.initialize(
+      appGroupId: "group.com.your.app", // iOS only
+    );
+
+    // Check device support (Android 16+ / iOS 17.2+)
+    await PPGLiveActivities.instance.isSupported();
+
+    // Follow / stop following a live notification
+    await PPGLiveActivities.instance.subscribe("<liveNotificationId>");
+    await PPGLiveActivities.instance.unsubscribe("<liveNotificationId>");
+
+    // Inspect what is currently rendered
+    await PPGLiveActivities.instance.isActive("<liveNotificationId>");
+    await PPGLiveActivities.instance.getActiveActivities();
+
+    // Stored subscriber id (Android only)
+    await PPGLiveActivities.instance.getSubscriberId("<liveNotificationId>");
+
+    // Lifecycle events
+    PPGLiveActivities.instance.statusStream.listen((event) {
+      print("${event.liveNotificationId}: ${event.status}");
+    });
+
+    // Taps on the activity body or its action buttons
+    PPGLiveActivities.instance.setClickHandler((click) {
+      print("${click.deepLink} (action ${click.actionIndex})");
+    });
 ```
