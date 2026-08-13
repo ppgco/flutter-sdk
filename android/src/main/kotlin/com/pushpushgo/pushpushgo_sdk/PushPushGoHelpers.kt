@@ -27,31 +27,44 @@ class PushPushGoHelpers {
             }
         }
 
+        /**
+         * Bring the native SDK up from the credentials stored on the previous
+         * run, before Flutter starts.
+         *
+         * @return true when the SDK is ready to use.
+         */
         fun initialize(application: Application): Boolean {
             val prefs = PpgSharedPrefs()
             val context = application.applicationContext
             val creds = prefs.getCredentials(context)
+            val apiToken = creds["apiToken"].orEmpty()
+            val projectId = creds["projectId"].orEmpty()
 
-            if (creds["apiToken"] != "" && creds["projectId"] != "") {
-                val isProduction = prefs.getIsProduction(context)
-                val isDebug = prefs.getIsDebug(context)
+            // First run: nothing stored yet, Flutter will initialize the SDK.
+            if (apiToken.isEmpty() || projectId.isEmpty()) return false
 
+            return try {
                 PushPushGo.getInstance(
                     application = application,
-                    apiKey = if (creds["apiToken"] is String) creds["apiToken"] as String else throw Exception("apiToken is is required"),
-                    projectId = if (creds["projectId"] is String) creds["projectId"] as String else throw Exception("projectId is is required"),
-                    isProduction = isProduction,
-                    isDebug = isDebug
+                    apiKey = apiToken,
+                    projectId = projectId,
+                    isProduction = prefs.getIsProduction(context),
+                    isDebug = prefs.getIsDebug(context)
                 )
 
                 // Re-apply notification handler override based on persisted flag,
                 // so that link opening is suppressed before Flutter side initializes.
                 applyNotificationLinkHandlerOverride(context)
 
-                return true
+                true
+            } catch (e: Exception) {
+                // Written by a build that did not validate credentials before
+                // storing them. Clear them so the next launch takes the
+                // first-run path instead of failing here again.
+                Log.e("PpgHelpers", "Stored credentials rejected, clearing them: ${e.message}")
+                prefs.clearCredentials(context)
+                false
             }
-
-            return false
         }
 
         fun onNewIntent(application: Application, intent: Intent) {

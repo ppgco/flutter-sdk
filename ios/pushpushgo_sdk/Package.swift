@@ -11,14 +11,15 @@ let package = Package(
         .library(name: "pushpushgo-sdk", targets: ["pushpushgo_sdk"])
     ],
     dependencies: [
-        .package(url: "https://github.com/ppgco/ios-sdk.git", from: "4.2.0")
+        .package(url: "https://github.com/ppgco/ios-sdk.git", from: "4.4.0")
     ],
     targets: [
         .target(
             name: "pushpushgo_sdk",
             dependencies: [
                 .product(name: "PPG_framework", package: "ios-sdk"),
-                .product(name: "PPG_InAppMessages", package: "ios-sdk")
+                .product(name: "PPG_InAppMessages", package: "ios-sdk"),
+                .product(name: "PPG_LiveActivities", package: "ios-sdk")
             ],
             resources: []
         )

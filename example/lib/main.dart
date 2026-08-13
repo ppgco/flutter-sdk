@@ -37,6 +37,27 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initialize() async {
+    // Taps on the Live Activity body or its action buttons. Registered before
+    // the first await so a tap that launched the app is handled as early as
+    // possible — the SDK replays it anyway if the handler comes later.
+    PPGLiveActivities.instance.setClickHandler((click) {
+      log("LIVE ACTIVITY CLICKED: $click");
+      // Surfaced on screen because a tap usually arrives during a cold start,
+      // when no debugger is attached to see the log.
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.teal,
+          duration: const Duration(seconds: 5),
+          content: Text(
+            "Live Activity clicked\n"
+            "id: ${click.liveNotificationId}\n"
+            "deepLink: ${click.deepLink ?? "-"}\n"
+            "${click.isBodyClick ? "body" : "action button ${click.actionIndex}"}",
+          ),
+        ),
+      );
+    });
+
     // Initialize Push Notifications SDK
     await _pushpushgo.initialize(
       onNewSubscriptionHandler: (subscriberId) {
@@ -79,6 +100,15 @@ class _MyAppState extends State<MyApp> {
       log("Custom code action received: $code");
       _handleCustomCode(code);
     });
+
+    // Initialize Live Activities
+    // Credentials are reused from the push SDK; iOS additionally needs the App
+    // Group shared with the Widget Extension.
+    await PPGLiveActivities.instance.initialize(
+      appGroupId: "group.ppg.fluttersdk",
+      isProduction: false, // Use staging API (api.master1.qappg.co)
+      isDebug: true,
+    );
 
     if (!mounted) return;
   }
@@ -180,15 +210,100 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+/// Demo campaign used by the `simulatePush` buttons below.
+const String _demoLiveNotificationId = "demo-match-1";
+
+const String _demoConfiguration = '''
+{"type":"FOOTBALL_MATCH_TRACKING",
+ "content":{"title":"Premier League",
+   "homeTeamName":"Arsenal",
+   "homeTeamImage":"https://crests.football-data.org/57.png",
+   "awayTeamName":"Chelsea",
+   "awayTeamImage":"https://crests.football-data.org/61.png"},
+ "design":{"android":{"hasTrackerIcon":true,
+   "progressBarColor":{"lightMode":"#4CAF50","darkMode":"#2E7D32"},
+   "breakTimeBarColor":{"lightMode":"#FFC107","darkMode":"#FFA000"}}},
+ "statusLabels":{"PRE_MATCH":"Starting soon","FIRST_HALF":"1st half",
+   "HALF_TIME_BREAK":"Half time","SECOND_HALF":"2nd half",
+   "FULL_TIME":"Full time","OTHER":"Match"},
+ "actions":[{"type":"OPEN_APP","name":"Open"},
+   {"type":"CLOSE","name":"Dismiss"}],
+ "timeout":{"minutes":150},
+ "url":"app://demo/match/demo-match-1"}
+''';
+
 class _HomeScreenState extends State<HomeScreen> {
   String _statusMessage = "Ready";
   Color _statusColor = Colors.grey;
 
+  final _liveNotificationController = TextEditingController();
+  StreamSubscription<LiveActivityStatusEvent>? _liveActivitySubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Lifecycle of subscribed live notifications
+    _liveActivitySubscription =
+        PPGLiveActivities.instance.statusStream.listen((event) {
+      log("Live Activity status: $event");
+      _updateStatus(
+        "📡 Live Activity: ${event.status.name}"
+        "${event.error != null ? "\n${event.error}" : ""}",
+        color:
+            event.status == LiveActivityStatus.error ? Colors.red : Colors.teal,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _liveActivitySubscription?.cancel();
+    _liveNotificationController.dispose();
+    super.dispose();
+  }
+
   void _updateStatus(String message, {Color? color}) {
+    if (!mounted) return;
     setState(() {
       _statusMessage = message;
       _statusColor = color ?? Colors.blue;
     });
+  }
+
+  /// Drive the Live Activity pipeline locally, without a backend campaign.
+  ///
+  /// Android only — `simulatePush` is a no-op on iOS, where activities are
+  /// started by ActivityKit push-to-start. `configuration` is only required on
+  /// `start`; later events reuse the one already tracked.
+  Future<void> _simulateLiveActivityPush({
+    required String event,
+    int homeScore = 0,
+    int awayScore = 0,
+    String phase = "FIRST_HALF",
+    String? hotMessage,
+  }) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final envelope = <String, String>{
+      'type': 'live_notification',
+      'liveNotificationId': _demoLiveNotificationId,
+      'event': event,
+      'template': 'FOOTBALL_MATCH_TRACKING',
+      'liveData': '{"type":"FOOTBALL_MATCH_TRACKING",'
+          '"homeTeamScore":$homeScore,"awayTeamScore":$awayScore,'
+          '"status":"$phase","statusChangedAt":$now}',
+      if (event == 'start') 'configuration': _demoConfiguration,
+      if (hotMessage != null)
+        'hotMessage': '{"id":"hot-$now","text":"$hotMessage",'
+            '"timestamp":${now ~/ 1000 + 30}}',
+    };
+
+    await PPGLiveActivities.instance.simulatePush(envelope);
+    _updateStatus(
+      "🧪 simulatePush($event) sent — Android only",
+      color: Colors.purple,
+    );
   }
 
   @override
@@ -400,6 +515,141 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.grey,
                       );
                     },
+                  ),
+
+                  const Divider(height: 32),
+
+                  // Live Activities section
+                  const Text("Live Activities",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _liveNotificationController,
+                    decoration: const InputDecoration(
+                      labelText: "Live notification ID",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Check support"),
+                    onPressed: () async {
+                      final supported =
+                          await PPGLiveActivities.instance.isSupported();
+                      _updateStatus(
+                        supported
+                            ? "✅ Live Activities are supported on this device"
+                            : "⚠️ Live Activities not available\n"
+                                "Requires Android 16 (API 36) or iOS 17.2+,\n"
+                                "and must be enabled in system settings.",
+                        color: supported ? Colors.green : Colors.orange,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Subscribe"),
+                    onPressed: () async {
+                      final id = _liveNotificationController.text.trim();
+                      if (id.isEmpty) {
+                        _updateStatus("⚠️ Enter a live notification ID first",
+                            color: Colors.orange);
+                        return;
+                      }
+
+                      _updateStatus("⏳ Subscribing to $id...",
+                          color: Colors.orange);
+                      try {
+                        final subscriberId =
+                            await PPGLiveActivities.instance.subscribe(id);
+                        _updateStatus(
+                          "✅ Subscribed to $id"
+                          "${subscriberId != null ? "\nSubscriber: $subscriberId" : ""}",
+                          color: Colors.green,
+                        );
+                      } catch (e) {
+                        _updateStatus("❌ Subscribe failed\n$e",
+                            color: Colors.red);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Unsubscribe"),
+                    onPressed: () async {
+                      final id = _liveNotificationController.text.trim();
+                      if (id.isEmpty) {
+                        _updateStatus("⚠️ Enter a live notification ID first",
+                            color: Colors.orange);
+                        return;
+                      }
+
+                      _updateStatus("⏳ Unsubscribing from $id...",
+                          color: Colors.orange);
+                      try {
+                        await PPGLiveActivities.instance.unsubscribe(id);
+                        _updateStatus("✅ Unsubscribed from $id",
+                            color: Colors.green);
+                      } catch (e) {
+                        _updateStatus("❌ Unsubscribe failed\n$e",
+                            color: Colors.red);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("List active activities"),
+                    onPressed: () async {
+                      final activities = await PPGLiveActivities.instance
+                          .getActiveActivities();
+                      if (activities.isEmpty) {
+                        _updateStatus("ℹ️ No active Live Activities",
+                            color: Colors.grey);
+                        return;
+                      }
+
+                      _updateStatus(
+                        "📋 Active Live Activities:\n"
+                        "${activities.join("\n")}",
+                        color: Colors.teal,
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Simulate a campaign (Android only, no backend needed)",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Simulate: start"),
+                    onPressed: () => _simulateLiveActivityPush(
+                      event: "start",
+                      homeScore: 0,
+                      awayScore: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Simulate: goal (update)"),
+                    onPressed: () => _simulateLiveActivityPush(
+                      event: "update",
+                      homeScore: 1,
+                      awayScore: 0,
+                      hotMessage: "GOAL!",
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Simulate: end"),
+                    onPressed: () => _simulateLiveActivityPush(
+                      event: "end",
+                      homeScore: 1,
+                      awayScore: 0,
+                      phase: "FULL_TIME",
+                    ),
                   ),
                 ],
               ),

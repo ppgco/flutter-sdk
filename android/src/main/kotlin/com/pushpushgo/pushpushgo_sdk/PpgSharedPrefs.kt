@@ -29,6 +29,13 @@ class PpgSharedPrefs {
         saveString(context, "projectId", credentials["projectId"] as String)
     }
 
+    fun clearCredentials(context: Context) {
+        val editor = getSharedPreferences(context).edit()
+        editor.remove("apiToken")
+        editor.remove("projectId")
+        editor.apply()
+    }
+
     fun getCredentials(context: Context): Map<String, String> {
         val apiToken: String = getString(context, "apiToken", "")
         val projectId: String = getString(context, "projectId", "")

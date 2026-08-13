@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ppgco/ios-sdk.git",
       "state" : {
-        "revision" : "fe8454ad5b7826bd09e0cbd69491d9af569f723b",
-        "version" : "4.2.0"
+        "revision" : "6f2caa4cb5d03a78d504e4694c712df88445eb61",
+        "version" : "4.4.0"
       }
     }
   ],

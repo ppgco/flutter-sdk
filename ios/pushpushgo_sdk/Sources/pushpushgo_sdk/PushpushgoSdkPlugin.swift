@@ -21,7 +21,14 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
   private var pendingNotificationResponse: UNNotificationResponse?
   
   static var instance: PushpushgoSdkPlugin?
-  
+
+  /// Configuration captured during `initialize`, so feature plugins (Live
+  /// Activities) can reuse it instead of asking the app for the same values
+  /// twice.
+  static var configuredProjectId: String?
+  static var configuredApiToken: String?
+  static var configuredAppGroupId: String?
+
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "com.pushpushgo/sdk", binaryMessenger: registrar.messenger())
     let instance = PushpushgoSdkPlugin()
@@ -39,7 +46,10 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     
     // Register In-App Messages plugin
     InAppMessagesPlugin.register(with: registrar)
-    
+
+    // Register Live Activities plugin
+    LiveActivitiesPlugin.register(with: registrar)
+
     print("registrar")
   }
     
@@ -65,6 +75,13 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
   public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable: Any] = [:]) -> Bool {
     self.application = application;
     return true
+  }
+
+  /// Live Activity taps reach the app as URLs — an action button's link, or the
+  /// `widgetURL` behind the notification body. Returning false lets other
+  /// plugins handle URLs that are not ours.
+  public func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    return LiveActivitiesPlugin.handleOpenURL(url)
   }
 
     // TODO
@@ -215,6 +232,10 @@ public class PushpushgoSdkPlugin: NSObject, FlutterPlugin, FlutterApplicationLif
     
     UNUserNotificationCenter.current().delegate = PushpushgoSdkPlugin.instance
     PPG.initializeNotifications(projectId: projectId, apiToken: apiToken, appGroupId: appGroupId)
+
+    PushpushgoSdkPlugin.configuredProjectId = projectId
+    PushpushgoSdkPlugin.configuredApiToken = apiToken
+    PushpushgoSdkPlugin.configuredAppGroupId = appGroupId
 
     // Replay a notification tap that launched the app before initialization
     isInitialized = true
