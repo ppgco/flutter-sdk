@@ -1,6 +1,7 @@
 package com.pushpushgo.pushpushgo_sdk
 
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -27,6 +28,9 @@ class LiveActivitiesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Eve
         private const val TAG = "LiveActivitiesPlugin"
         private const val METHOD_CHANNEL_NAME = "com.pushpushgo/liveactivities/methods"
         private const val EVENT_CHANNEL_NAME = "com.pushpushgo/liveactivities/events"
+
+        /** Android 16 — the first release with ProgressStyle Live Updates. */
+        private const val LIVE_ACTIVITY_MIN_SDK = 36
     }
 
     private lateinit var methodChannel: MethodChannel
@@ -110,13 +114,22 @@ class LiveActivitiesPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Eve
         }
     }
 
+    /**
+     * Whether this device can render Live Activities.
+     *
+     * Device support is a pure OS-version question, so it must not depend on
+     * the push SDK being initialized — otherwise an app that calls this before
+     * (or without) a successful `initialize()` is told its Android 16 device is
+     * unsupported. The SDK stays the source of truth when it is available.
+     */
     private fun handleIsSupported(result: MethodChannel.Result) {
-        try {
+        if (PushPushGo.isInitialized()) {
             result.success(PushPushGo.getInstance().isLiveActivitiesSupported())
-        } catch (e: Exception) {
-            Log.w(TAG, "isSupported failed: ${e.message}")
-            result.success(false)
+            return
         }
+
+        Log.d(TAG, "PushPushGo not initialized yet, falling back to the OS version check")
+        result.success(Build.VERSION.SDK_INT >= LIVE_ACTIVITY_MIN_SDK)
     }
 
     private fun handleSubscribe(call: MethodCall, result: MethodChannel.Result) {

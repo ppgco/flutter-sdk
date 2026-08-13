@@ -108,11 +108,15 @@ class LiveActivityClick {
 
   /// Deep link carried by the clicked element, if any.
   ///
-  /// Whether the SDK already opened it depends on the `handleNotificationLink`
-  /// flag passed to `PushpushgoSdk.initialize`.
+  /// On Android, whether the SDK already opened it depends on the
+  /// `handleNotificationLink` flag passed to `PushpushgoSdk.initialize`. On iOS
+  /// that flag does not apply — the native SDK always forwards the tap to this
+  /// destination, and the handler is informational. See `LIVE_ACTIVITIES.md`.
   final String? deepLink;
 
   /// Index of the tapped action button, or `-1` for a tap on the body.
+  ///
+  /// Reported on both platforms.
   final int actionIndex;
 
   const LiveActivityClick({
@@ -141,8 +145,10 @@ class LiveActivityClick {
 
 /// Snapshot of a Live Activity currently tracked by the native SDK.
 ///
-/// The football-match fields are populated for the `FOOTBALL_MATCH_TRACKING`
-/// template; they are `null` for other templates.
+/// **Android only** for the football-match fields: the iOS ActivityKit
+/// bookkeeping exposes just the identifiers, so everything below [status] is
+/// `null` there. On Android they are populated for the
+/// `FOOTBALL_MATCH_TRACKING` template and `null` for other templates.
 class LiveActivityInfo {
   /// Backend id of the live notification.
   final String id;

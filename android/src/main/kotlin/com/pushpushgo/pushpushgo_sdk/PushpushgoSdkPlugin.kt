@@ -189,6 +189,16 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
           val apiToken = call.argument<String>("apiToken") ?: throw Exception("apiToken is is required");
           val projectId = call.argument<String>("projectId") ?: throw Exception("projectId is is required");
 
+          // Checked here rather than left to the native SDK: getInstance() skips
+          // validation when an instance already exists, so bad credentials would
+          // be persisted below and crash the next cold start.
+          val credentialsError = PpgCredentials.validationError(apiToken, projectId)
+          if (credentialsError != null) {
+            Log.e("PpgPlugin", "Refusing to initialize: $credentialsError")
+            result.error("INVALID_CREDENTIALS", credentialsError, null)
+            return
+          }
+
           val isProduction = call.argument<Boolean>("isProduction") ?: true
           val isDebug = call.argument<Boolean>("isDebug") ?: false
           val handleNotificationLinkArg = call.argument<String>("handleNotificationLink")

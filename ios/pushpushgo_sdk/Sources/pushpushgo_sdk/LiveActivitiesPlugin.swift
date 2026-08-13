@@ -3,9 +3,8 @@ import UIKit
 
 // Live Activities ship as a separate module of the native SDK. It is always
 // linked through Swift Package Manager; on CocoaPods it is only present once
-// the app depends on `PPG_LiveActivities` (which requires a podspec accepting
-// the app's deployment target). Everything that touches the module is compiled
-// conditionally so the plugin keeps working either way.
+// the app adds `PPG_LiveActivities` to its own Podfile. Everything that touches
+// the module is compiled conditionally so the plugin keeps working either way.
 #if canImport(PPG_LiveActivities)
 import PPG_LiveActivities
 #endif
@@ -294,48 +293,92 @@ public class LiveActivitiesPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
 
     // URL routing
 
+    /// The parts of the SDK-owned `ppg-la://click` wrapper that Dart needs.
+    private struct ClickURL {
+        let liveNotificationId: String
+        let deepLink: String?
+        let actionIndex: Int
+    }
+
+    /// Read a `ppg-la://click?id=…&type=…&v=…&to=<destination>` URL.
+    ///
+    /// Every tappable element of a Live Activity — the body via `widgetURL`,
+    /// each action button via `Link` — is wrapped in one of these so the tap
+    /// can be counted before the real destination is followed. The SDK's own
+    /// parser is internal to `PPG_LiveActivities`, hence this one.
+    ///
+    /// `scheme` is passed in rather than read from `LiveActivitiesSDK` so this
+    /// stays compilable when the module is not linked at all.
+    private static func parseClickURL(_ url: URL, scheme: String) -> ClickURL? {
+        guard url.host?.lowercased() == "click",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+
+        let items = components.queryItems ?? []
+        func value(_ name: String) -> String? { items.first { $0.name == name }?.value }
+
+        guard let liveNotificationId = value("id") else { return nil }
+
+        // `type` doubles as the button index: the body reports `clicked`,
+        // action buttons `clicked_1` / `clicked_2`. Mapping them to 0 and 1
+        // matches the 0-based `actionIndex` Android reports.
+        let actionIndex: Int
+        switch value("type") {
+        case "clicked_1": actionIndex = 0
+        case "clicked_2": actionIndex = 1
+        default: actionIndex = -1
+        }
+
+        // A CLOSE button points at another SDK-internal URL, which is not
+        // something the app can route — report no deep link for it.
+        let destination = value("to")
+        let isInternal = destination?.lowercased().hasPrefix("\(scheme):") ?? false
+
+        return ClickURL(
+            liveNotificationId: liveNotificationId,
+            deepLink: isInternal ? nil : destination,
+            actionIndex: actionIndex
+        )
+    }
+
     /// Handle a URL that opened the app from a Live Activity — an action
     /// button, or the `widgetURL` behind the notification body.
     ///
     /// Only the SDK-owned `ppg-la` scheme is consumed (returning `true`).
-    /// Everything else returns `false` and is left untouched, so universal
-    /// links and other plugins' deep links keep working — in particular the URL
-    /// is never opened on the app's behalf here.
+    /// Everything else returns `false` untouched, so universal links and other
+    /// plugins' deep links keep working.
     ///
-    /// Deep links are still reported to Dart while an activity is running, so
-    /// the app can route them itself.
+    /// Consuming the wrapper hands it to `LiveActivitiesSDK.handleURL`, which
+    /// records the tap and then follows the destination it carries: `http(s)`
+    /// opens in the browser, a custom scheme is re-opened so the app's own
+    /// routing sees it, and `ppg-la://close` ends the activity. Either way the
+    /// tap is reported to Dart with that destination as its deep link, so the
+    /// app can route it itself.
     @discardableResult
     static func handleOpenURL(_ url: URL) -> Bool {
         #if canImport(PPG_LiveActivities)
         guard #available(iOS 17.2, *) else { return false }
+        guard url.scheme?.lowercased() == LiveActivitiesSDK.urlScheme else { return false }
 
-        if url.scheme?.lowercased() == LiveActivitiesSDK.urlScheme {
-            var closedNotificationId = ""
+        let click = parseClickURL(url, scheme: LiveActivitiesSDK.urlScheme)
 
-            let handled = LiveActivitiesSDK.handleURL(url) { liveNotificationId in
-                closedNotificationId = liveNotificationId
-                LiveActivitiesSDK.shared.endAllActivities(ofType: MatchActivityAttributes.self)
-            }
-
-            LiveActivitiesPlugin.instance?.sendClick(
-                liveNotificationId: closedNotificationId,
-                deepLink: url.absoluteString
-            )
-
-            return handled
+        // Only fires for CLOSE buttons, and carries the id of the activity
+        // being closed — which a bare `ppg-la://close` URL has but the click
+        // wrapper reports through `id` instead.
+        var closedNotificationId: String?
+        let handled = LiveActivitiesSDK.handleURL(url) { liveNotificationId in
+            closedNotificationId = liveNotificationId
+            LiveActivitiesSDK.shared.endAllActivities(ofType: MatchActivityAttributes.self)
         }
 
-        // A URL arriving while an activity is on screen is almost certainly a
-        // tap on it; report it without claiming the URL.
-        let active = LiveActivitiesSDK.shared.getActiveActivities()
-        if let liveNotificationId = active.first?.templateId {
-            LiveActivitiesPlugin.instance?.sendClick(
-                liveNotificationId: liveNotificationId,
-                deepLink: url.absoluteString
-            )
-        }
+        LiveActivitiesPlugin.instance?.sendClick(
+            liveNotificationId: click?.liveNotificationId ?? closedNotificationId ?? "",
+            deepLink: click?.deepLink,
+            actionIndex: click?.actionIndex ?? -1
+        )
 
-        return false
+        return handled
         #else
         return false
         #endif
@@ -381,14 +424,14 @@ public class LiveActivitiesPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
 
     /// Report a tap on a Live Activity.
     ///
-    /// iOS delivers taps as URLs and does not identify which action button was
-    /// used, so `actionIndex` is always `-1`.
-    private func sendClick(liveNotificationId: String, deepLink: String?) {
+    /// `actionIndex` is the 0-based index of the tapped action button, or `-1`
+    /// for a tap on the notification body — the same contract as Android.
+    private func sendClick(liveNotificationId: String, deepLink: String?, actionIndex: Int) {
         send([
             "type": "click",
             "liveNotificationId": liveNotificationId,
             "deepLink": deepLink,
-            "actionIndex": -1
+            "actionIndex": actionIndex
         ])
     }
 

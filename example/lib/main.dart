@@ -37,6 +37,27 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initialize() async {
+    // Taps on the Live Activity body or its action buttons. Registered before
+    // the first await so a tap that launched the app is handled as early as
+    // possible — the SDK replays it anyway if the handler comes later.
+    PPGLiveActivities.instance.setClickHandler((click) {
+      log("LIVE ACTIVITY CLICKED: $click");
+      // Surfaced on screen because a tap usually arrives during a cold start,
+      // when no debugger is attached to see the log.
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.teal,
+          duration: const Duration(seconds: 5),
+          content: Text(
+            "Live Activity clicked\n"
+            "id: ${click.liveNotificationId}\n"
+            "deepLink: ${click.deepLink ?? "-"}\n"
+            "${click.isBodyClick ? "body" : "action button ${click.actionIndex}"}",
+          ),
+        ),
+      );
+    });
+
     // Initialize Push Notifications SDK
     await _pushpushgo.initialize(
       onNewSubscriptionHandler: (subscriberId) {
@@ -88,11 +109,6 @@ class _MyAppState extends State<MyApp> {
       isProduction: false, // Use staging API (api.master1.qappg.co)
       isDebug: true,
     );
-
-    // Taps on the Live Activity body or its action buttons
-    PPGLiveActivities.instance.setClickHandler((click) {
-      log("LIVE ACTIVITY CLICKED: $click");
-    });
 
     if (!mounted) return;
   }
@@ -194,6 +210,28 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+/// Demo campaign used by the `simulatePush` buttons below.
+const String _demoLiveNotificationId = "demo-match-1";
+
+const String _demoConfiguration = '''
+{"type":"FOOTBALL_MATCH_TRACKING",
+ "content":{"title":"Premier League",
+   "homeTeamName":"Arsenal",
+   "homeTeamImage":"https://crests.football-data.org/57.png",
+   "awayTeamName":"Chelsea",
+   "awayTeamImage":"https://crests.football-data.org/61.png"},
+ "design":{"android":{"hasTrackerIcon":true,
+   "progressBarColor":{"lightMode":"#4CAF50","darkMode":"#2E7D32"},
+   "breakTimeBarColor":{"lightMode":"#FFC107","darkMode":"#FFA000"}}},
+ "statusLabels":{"PRE_MATCH":"Starting soon","FIRST_HALF":"1st half",
+   "HALF_TIME_BREAK":"Half time","SECOND_HALF":"2nd half",
+   "FULL_TIME":"Full time","OTHER":"Match"},
+ "actions":[{"type":"OPEN_APP","name":"Open"},
+   {"type":"CLOSE","name":"Dismiss"}],
+ "timeout":{"minutes":150},
+ "url":"app://demo/match/demo-match-1"}
+''';
+
 class _HomeScreenState extends State<HomeScreen> {
   String _statusMessage = "Ready";
   Color _statusColor = Colors.grey;
@@ -231,6 +269,41 @@ class _HomeScreenState extends State<HomeScreen> {
       _statusMessage = message;
       _statusColor = color ?? Colors.blue;
     });
+  }
+
+  /// Drive the Live Activity pipeline locally, without a backend campaign.
+  ///
+  /// Android only — `simulatePush` is a no-op on iOS, where activities are
+  /// started by ActivityKit push-to-start. `configuration` is only required on
+  /// `start`; later events reuse the one already tracked.
+  Future<void> _simulateLiveActivityPush({
+    required String event,
+    int homeScore = 0,
+    int awayScore = 0,
+    String phase = "FIRST_HALF",
+    String? hotMessage,
+  }) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final envelope = <String, String>{
+      'type': 'live_notification',
+      'liveNotificationId': _demoLiveNotificationId,
+      'event': event,
+      'template': 'FOOTBALL_MATCH_TRACKING',
+      'liveData': '{"type":"FOOTBALL_MATCH_TRACKING",'
+          '"homeTeamScore":$homeScore,"awayTeamScore":$awayScore,'
+          '"status":"$phase","statusChangedAt":$now}',
+      if (event == 'start') 'configuration': _demoConfiguration,
+      if (hotMessage != null)
+        'hotMessage': '{"id":"hot-$now","text":"$hotMessage",'
+            '"timestamp":${now ~/ 1000 + 30}}',
+    };
+
+    await PPGLiveActivities.instance.simulatePush(envelope);
+    _updateStatus(
+      "🧪 simulatePush($event) sent — Android only",
+      color: Colors.purple,
+    );
   }
 
   @override
@@ -542,6 +615,41 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.teal,
                       );
                     },
+                  ),
+
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Simulate a campaign (Android only, no backend needed)",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Simulate: start"),
+                    onPressed: () => _simulateLiveActivityPush(
+                      event: "start",
+                      homeScore: 0,
+                      awayScore: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Simulate: goal (update)"),
+                    onPressed: () => _simulateLiveActivityPush(
+                      event: "update",
+                      homeScore: 1,
+                      awayScore: 0,
+                      hotMessage: "GOAL!",
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    child: const Text("Simulate: end"),
+                    onPressed: () => _simulateLiveActivityPush(
+                      event: "end",
+                      homeScore: 1,
+                      awayScore: 0,
+                      phase: "FULL_TIME",
+                    ),
                   ),
                 ],
               ),

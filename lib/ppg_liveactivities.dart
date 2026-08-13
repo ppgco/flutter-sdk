@@ -44,10 +44,31 @@ class PPGLiveActivities {
   /// Alternative getter for singleton (matches iOS/Android pattern)
   static PPGLiveActivities get shared => instance;
 
+  /// Upper bound for the replay buffers below. A Live Activity produces a
+  /// handful of events per launch; anything beyond this means nobody is
+  /// consuming them, so the oldest are dropped rather than grown forever.
+  static const int _maxBufferedEvents = 20;
+
   bool _isInitialized = false;
   LiveActivityClickHandler? _clickHandler;
   StreamSubscription<dynamic>? _eventSubscription;
   StreamController<LiveActivityStatusEvent>? _statusController;
+
+  /// Clicks that arrived before [setClickHandler] was called.
+  ///
+  /// A tap that launches the app is delivered by the native side as soon as the
+  /// event channel opens — which happens as soon as *anything* touches
+  /// [statusStream], typically a widget's `initState`. That is usually earlier
+  /// than the app gets round to registering its click handler, so without this
+  /// buffer a cold-start tap would be dropped.
+  final List<LiveActivityClick> _pendingClicks = <LiveActivityClick>[];
+
+  /// Status events that arrived before anyone listened to [statusStream].
+  ///
+  /// A broadcast stream discards events published while it has no listener,
+  /// which would silently lose `registered` for an early `subscribe()`.
+  final List<LiveActivityStatusEvent> _pendingStatusEvents =
+      <LiveActivityStatusEvent>[];
 
   /// Check if Live Activities support is initialized
   bool get isInitialized => _isInitialized;
@@ -55,9 +76,12 @@ class PPGLiveActivities {
   /// Lifecycle events for subscribed live notifications
   ///
   /// The stream is a broadcast stream, so it can be listened to from several
-  /// places. Events keep arriving until [dispose] is called.
+  /// places. Events that arrived before the first listener attached are
+  /// replayed to it. Events keep arriving until [dispose] is called.
   Stream<LiveActivityStatusEvent> get statusStream {
-    _statusController ??= StreamController<LiveActivityStatusEvent>.broadcast();
+    _statusController ??= StreamController<LiveActivityStatusEvent>.broadcast(
+      onListen: _flushPendingStatusEvents,
+    );
     _setupEventListening();
     return _statusController!.stream;
   }
@@ -228,10 +252,13 @@ class PPGLiveActivities {
   /// The handler receives the deep link carried by the tapped element and the
   /// index of the tapped action button (`-1` for the notification body).
   ///
-  /// When `PushpushgoSdk.initialize()` was called with
-  /// `handleNotificationLink: true` (the default) the SDK already opened the
-  /// link — the handler is then informational. Pass `false` to route the link
-  /// yourself.
+  /// A tap that launched the app is replayed to the handler as soon as it is
+  /// registered, so registering it late — for example after `initialize()` —
+  /// does not lose a cold-start click.
+  ///
+  /// On Android, whether the SDK already opened the link follows the
+  /// `handleNotificationLink` flag passed to `PushpushgoSdk.initialize()`. On
+  /// iOS the flag does not apply; see `LIVE_ACTIVITIES.md`.
   ///
   /// Example:
   /// ```dart
@@ -244,6 +271,14 @@ class PPGLiveActivities {
   void setClickHandler(LiveActivityClickHandler handler) {
     _clickHandler = handler;
     _setupEventListening();
+
+    if (_pendingClicks.isEmpty) return;
+
+    final buffered = List<LiveActivityClick>.of(_pendingClicks);
+    _pendingClicks.clear();
+    for (final click in buffered) {
+      handler(click);
+    }
   }
 
   /// Feed a push envelope into the rendering pipeline — testing only
@@ -275,17 +310,25 @@ class PPGLiveActivities {
         final type = event['type'] as String?;
 
         if (type == 'click') {
+          final click = LiveActivityClick.fromMap(event);
           final handler = _clickHandler;
           if (handler != null) {
-            handler(LiveActivityClick.fromMap(event));
+            handler(click);
+          } else {
+            _buffer(_pendingClicks, click);
           }
           return;
         }
 
         if (type == 'status') {
+          final statusEvent = LiveActivityStatusEvent.fromMap(event);
           final controller = _statusController;
-          if (controller != null && !controller.isClosed) {
-            controller.add(LiveActivityStatusEvent.fromMap(event));
+          if (controller != null &&
+              !controller.isClosed &&
+              controller.hasListener) {
+            controller.add(statusEvent);
+          } else {
+            _buffer(_pendingStatusEvents, statusEvent);
           }
         }
       },
@@ -293,6 +336,33 @@ class PPGLiveActivities {
         log('PPGLiveActivities: Event stream error - $error');
       },
     );
+  }
+
+  /// Append to a replay buffer, dropping the oldest entry once it is full
+  static void _buffer<T>(List<T> buffer, T event) {
+    if (buffer.length >= _maxBufferedEvents) {
+      buffer.removeAt(0);
+    }
+    buffer.add(event);
+  }
+
+  /// Replay status events that arrived before the first listener attached
+  ///
+  /// Runs off a microtask: a broadcast controller ignores events added from
+  /// inside its own `onListen` callback.
+  void _flushPendingStatusEvents() {
+    if (_pendingStatusEvents.isEmpty) return;
+
+    final buffered = List<LiveActivityStatusEvent>.of(_pendingStatusEvents);
+    _pendingStatusEvents.clear();
+
+    scheduleMicrotask(() {
+      final controller = _statusController;
+      if (controller == null || controller.isClosed) return;
+      for (final event in buffered) {
+        controller.add(event);
+      }
+    });
   }
 
   /// Check if Live Activities support is initialized and throw if not
@@ -305,11 +375,17 @@ class PPGLiveActivities {
   }
 
   /// Dispose resources (call when app is closing)
+  ///
+  /// The singleton is left reusable: a later [initialize] re-attaches the
+  /// event channel rather than short-circuiting on a stale initialized flag.
   void dispose() {
     _eventSubscription?.cancel();
     _eventSubscription = null;
     _statusController?.close();
     _statusController = null;
     _clickHandler = null;
+    _pendingClicks.clear();
+    _pendingStatusEvents.clear();
+    _isInitialized = false;
   }
 }

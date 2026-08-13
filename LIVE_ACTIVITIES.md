@@ -181,49 +181,62 @@ Both views ship with the SDK, so this file is the entire extension.
 ### CocoaPods
 
 The plugin links `PPG_LiveActivities` automatically through **Swift Package
-Manager**. On CocoaPods the upstream `PPG_LiveActivities` podspec still declares
-a 17.2 deployment target, which cannot be a dependency of the `pushpushgo_sdk`
-pod (14.0). Until that is relaxed upstream, add it to your own `Podfile`:
+Manager**, which is the recommended path.
+
+On CocoaPods you add it yourself. The plugin cannot declare it as a dependency
+because `PPG_LiveActivities` is not published to the CocoaPods trunk — doing so
+would break `pod install` for every app that does not use Live Activities. Add
+it to your own `Podfile`, pinned to the same tag as the rest of the native SDK:
 
 ```ruby
 target 'Runner' do
   # ...
-  pod 'PPG_LiveActivities'
+  pod 'PPG_LiveActivities', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.4.0'
 end
 
 target 'LiveActivityWidget' do
   platform :ios, '17.2'
-  pod 'PPG_LiveActivities'
+  pod 'PPG_LiveActivities', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.4.0'
 end
 ```
 
 Without it the plugin still builds and runs — Live Activities simply report as
 unsupported.
 
+> [!WARNING]
+> Do not mix the two integration paths for the same module. CocoaPods links an
+> app extension's pods into the host app as well, so adding a pod that the
+> Swift Package already provides makes the app load two copies of every class
+> (`Class … is implemented in both …` at launch). The bundled example uses
+> Swift Package Manager for all three targets — app, NSE and widget — and keeps
+> its `Podfile` free of PPG pods.
+
 ## Handling taps
 
 ```dart
 PPGLiveActivities.instance.setClickHandler((click) {
   print(click.liveNotificationId);
-  print(click.deepLink);   // link carried by the tapped element
-  print(click.actionIndex); // -1 = body, 0/1 = action buttons (Android)
+  print(click.deepLink);    // link carried by the tapped element
+  print(click.actionIndex); // -1 = body, 0/1 = action buttons
 });
 ```
 
-Whether the SDK opens the deep link itself follows the `handleNotificationLink`
-flag you passed to `PushpushgoSdk.initialize()` — the same behaviour as regular
-push clicks. Pass `false` to route every link yourself.
+Both platforms report the same three fields, including which action button was
+tapped. A tap that launched the app is replayed to the handler as soon as you
+register it, so registering it late — even after `initialize()` — cannot lose a
+cold-start click.
 
-Platform differences:
+Who opens the link differs:
 
-- **Android** distinguishes the notification body from each action button, so
-  `actionIndex` is meaningful, and the SDK opens the deep link unless you opted
-  out.
-- **iOS** delivers taps as URLs and does not report which button was used, so
-  `actionIndex` is always `-1`. The plugin only ever consumes the SDK-owned
-  `ppg-la://` scheme (used by `CLOSE` buttons). Any other URL is reported to
-  your handler but deliberately **not** opened and **not** claimed, so universal
-  links and other deep-link plugins keep working — route it yourself.
+- **Android** follows the `handleNotificationLink` flag you passed to
+  `PushpushgoSdk.initialize()`, exactly like a regular push click. Pass `false`
+  to route every link yourself.
+- **iOS** ignores that flag. Taps arrive as an SDK-owned `ppg-la://` URL, which
+  the plugin consumes to count the tap and then forwards to the destination that
+  URL carries: `http(s)` opens in the browser, and a custom scheme is re-opened
+  so your app's own routing — or another deep-link plugin — receives it. Your
+  handler is notified either way, with that destination as `deepLink`. URLs that
+  are not `ppg-la://` are left completely untouched.
 
 ## API reference
 
@@ -235,7 +248,7 @@ Platform differences:
 | `unsubscribe(liveNotificationId)` | Stops following it |
 | `getSubscriberId(liveNotificationId)` | Stored subscriber id (Android only) |
 | `isActive(liveNotificationId)` | Whether it is currently rendered |
-| `getActiveActivities()` | All tracked activities as `List<LiveActivityInfo>` |
+| `getActiveActivities()` | All tracked activities as `List<LiveActivityInfo>`. Score / team / phase fields are Android only — iOS exposes identifiers only |
 | `statusStream` | Lifecycle events (`LiveActivityStatusEvent`) |
 | `setClickHandler(handler)` | Taps on the activity (`LiveActivityClick`) |
 | `simulatePush(data)` | Feeds a push envelope into the pipeline — Android, testing only |

@@ -191,8 +191,18 @@ Universal Links, AASA), see [DEEPLINKS.md](DEEPLINKS.md).
 
 Add to `target 'Runner' do` at the end of the declaration:
 ```pod
-  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.2.1'
+  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.4.0'
+  pod 'PPG_InAppMessages', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.4.0'
 ```
+
+**Both lines are required**, even if you only use push notifications — the
+plugin depends on both modules. The 4.x native SDK is served from GitHub rather
+than the CocoaPods trunk, so the `:git`/`:tag` source is what makes the right
+version resolvable; without it `pod install` stops with
+`None of your spec sources contain a spec satisfying the dependency`.
+
+Live Activities need a third pod — see the
+[Live Activities Guide](LIVE_ACTIVITIES.md#cocoapods).
 
 After that, in terminal, navigate to yourFlutterProject/ios/ and run:
 ```bash
@@ -303,7 +313,7 @@ $ pod install
   target 'NSE' do
     use_frameworks!
     use_modular_headers!
-    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.2.1'
+    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.4.0'
   end
   ```
 - Run:

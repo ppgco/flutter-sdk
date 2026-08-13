@@ -15,6 +15,7 @@
 		4C1A0A0100000000000000B1 /* MatchLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1A0A0100000000000000A3 /* MatchLiveActivityWidget.swift */; };
 		4C1A0A0100000000000000B2 /* LiveActivityWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4C1A0A0100000000000000A2 /* LiveActivityWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4C1A0A0100000000000000C3 /* PPG_LiveActivities in Frameworks */ = {isa = PBXBuildFile; productRef = 4C1A0A0100000000000000C2 /* PPG_LiveActivities */; };
+		4C1A0A0100000000000000D1 /* PPG_framework in Frameworks */ = {isa = PBXBuildFile; productRef = 4C1A0A0100000000000000D2 /* PPG_framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -104,6 +105,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D7D85078FAE6A6A3F82617AA /* Pods_NSE.framework in Frameworks */,
+				4C1A0A0100000000000000D1 /* PPG_framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,6 +238,9 @@
 			dependencies = (
 			);
 			name = NSE;
+			packageProductDependencies = (
+				4C1A0A0100000000000000D2 /* PPG_framework */,
+			);
 			productName = NSE;
 			productReference = 462A79CC2A39BE3000C9FC60 /* NSE.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -267,7 +272,6 @@
 				BC62FBD7B2D031B9C19B5FC1 /* [CP] Check Pods Manifest.lock */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				462A79D42A39BE3000C9FC60 /* Embed Foundation Extensions */,
-				AB6FF4F51C5B0CACDBDFD90C /* [CP] Embed Pods Frameworks */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
@@ -415,23 +419,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
-		};
-		AB6FF4F51C5B0CACDBDFD90C /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
 		};
 		BC62FBD7B2D031B9C19B5FC1 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1022,7 +1009,7 @@
 			repositoryURL = "https://github.com/ppgco/ios-sdk.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 4.3.0;
+				minimumVersion = 4.4.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1032,6 +1019,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4C1A0A0100000000000000C1 /* XCRemoteSwiftPackageReference "ios-sdk" */;
 			productName = PPG_LiveActivities;
+		};
+		4C1A0A0100000000000000D2 /* PPG_framework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4C1A0A0100000000000000C1 /* XCRemoteSwiftPackageReference "ios-sdk" */;
+			productName = PPG_framework;
 		};
 		78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */ = {
 			isa = XCSwiftPackageProductDependency;

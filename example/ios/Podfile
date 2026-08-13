@@ -1,6 +1,11 @@
 # Uncomment this line to define a global platform for your project
 platform :ios, '14.0'
 
+# Native iOS SDK the example builds against. Keep in step with the version the
+# plugin's Swift Package resolves (ios/pushpushgo_sdk/Package.swift).
+PPG_IOS_SDK_GIT = 'https://github.com/ppgco/ios-sdk.git'
+PPG_IOS_SDK_TAG = '4.4.0'
+
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -31,15 +36,34 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-  # Local ios-sdk for staging tests
-  pod 'PPG_framework', :path => '/Users/pushpushgo/Desktop/ios-sdk'
-  pod 'PPG_InAppMessages', :path => '/Users/pushpushgo/Desktop/ios-sdk'
+
+  # PPG_framework, PPG_InAppMessages and PPG_LiveActivities reach Runner through
+  # the plugin's Swift Package (ios/pushpushgo_sdk/Package.swift), so they are
+  # deliberately NOT pods here — declaring them again would link every class
+  # twice and the app would log "Class ... is implemented in both ..." at launch.
+  #
+  # Running with Swift Package Manager disabled? Then the plugin arrives as a pod
+  # and needs its dependencies from CocoaPods instead — add them back here:
+  #   pod 'PPG_framework',      :git => PPG_IOS_SDK_GIT, :tag => PPG_IOS_SDK_TAG
+  #   pod 'PPG_InAppMessages',  :git => PPG_IOS_SDK_GIT, :tag => PPG_IOS_SDK_TAG
+  #   pod 'PPG_LiveActivities', :git => PPG_IOS_SDK_GIT, :tag => PPG_IOS_SDK_TAG
 end
 
 target 'NSE' do
   use_frameworks!
-  pod 'PPG_framework', :path => '/Users/pushpushgo/Desktop/ios-sdk'
+  # PPG_framework is attached to this target as a Swift Package product in the
+  # Xcode project, the same way the widget extension gets PPG_LiveActivities.
+  #
+  # It deliberately is NOT a pod: CocoaPods links an extension's pods into the
+  # host app too, so a `pod 'PPG_framework'` here would put a dynamic copy in
+  # Runner next to the static one the plugin's Swift Package already provides —
+  # the "Class ... is implemented in both" duplication.
 end
+
+# Developing the native SDK alongside this example? Repoint the Swift Package:
+# Xcode → Runner project → Package Dependencies → remove the ios-sdk remote
+# package and add the local checkout instead (File → Add Package Dependencies →
+# Add Local…). Every target picks the local sources up from there.
 
 
 post_install do |installer|

@@ -16,14 +16,8 @@ Pod::Spec.new do |s|
   s.source           = { :path => '.' }
   s.source_files = 'pushpushgo_sdk/Sources/pushpushgo_sdk/**/*'
   s.dependency 'Flutter'
-  s.dependency 'PPG_framework'
-  s.dependency 'PPG_InAppMessages'
-  # Live Activities are linked automatically on Swift Package Manager. On
-  # CocoaPods the PPG_LiveActivities podspec still declares a 17.2 deployment
-  # target, which cannot be a dependency of this 14.0 pod — until that is
-  # relaxed upstream, apps opt in by adding `pod 'PPG_LiveActivities'` to their
-  # own Podfile. The plugin compiles with or without the module.
-  # s.dependency 'PPG_LiveActivities'
+  s.dependency 'PPG_framework', '~> 4.3'
+  s.dependency 'PPG_InAppMessages', '~> 4.3'
   s.platform = :ios, '14.0'
 
   # Flutter.framework does not contain a i386 slice.
