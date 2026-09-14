@@ -10,7 +10,10 @@ jobs:
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.7.12'
+          # Keep in step with the Flutter the plugin is actually developed and
+          # tested against — publishing from a much older SDK means `analyze`
+          # here never sees what integrators see.
+          flutter-version: '3.32.4'
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze

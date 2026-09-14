@@ -1,19 +1,20 @@
 allprojects {
     repositories {
         google()
-        maven { url 'https://jitpack.io' }
+        maven { url = 'https://jitpack.io' }
         mavenCentral()
     }
 }
 
-rootProject.buildDir = "../build"
+// layout.buildDirectory rather than the buildDir property, which Gradle 9 removes.
+rootProject.layout.buildDirectory.set(rootProject.layout.projectDirectory.dir("../build"))
 subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))
 }
 subprojects {
     project.evaluationDependsOn(":app")
 }
 
 tasks.register("clean", Delete) {
-    delete rootProject.buildDir
+    delete rootProject.layout.buildDirectory
 }

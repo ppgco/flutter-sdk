@@ -1,40 +1,50 @@
-group 'com.pushpushgo.pushpushgo_sdk'
-version '1.0-SNAPSHOT'
+group = 'com.pushpushgo.pushpushgo_sdk'
+version = '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.3.0'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // Kept only as a safety net for host apps that do not declare the Kotlin
+        // Gradle plugin themselves (a Flutter app with no Kotlin of its own) —
+        // without it those builds fail with "Plugin with id 'kotlin-android' not
+        // found". When the host does declare KGP, its version wins.
+        //
+        // The Android Gradle plugin is deliberately NOT on this classpath: the
+        // host's AGP always wins anyway, so pinning it here only misleads.
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0"
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-    }
+repositories {
+    google()
+    mavenCentral()
+    // The native Android SDK is published through JitPack.
+    maven { url = 'https://jitpack.io' }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+
+// AGP 9 brings its own Kotlin support and applying KGP alongside it is a hard
+// error. Apply KGP only when AGP is older, or when the host app opted out of
+// built-in Kotlin with android.builtInKotlin=false.
+def agpMajor = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')[0] as int
+def builtInKotlin = agpMajor >= 9 &&
+    providers.gradleProperty('android.builtInKotlin').getOrElse('true') != 'false'
+if (!builtInKotlin) {
+    apply plugin: 'kotlin-android'
+}
 
 android {
-    compileSdkVersion 35
-    namespace 'com.pushpushgo.pushpushgo_sdk'
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
+    compileSdk = 36
+    namespace = 'com.pushpushgo.pushpushgo_sdk'
 
-    kotlinOptions {
-        jvmTarget = '17'
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     sourceSets {
@@ -42,15 +52,27 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 26
+        minSdk = 26
         consumerProguardFiles 'consumer-rules.pro'
     }
 }
 
+// Top-level rather than android.kotlinOptions: this is the form both KGP and
+// AGP 9's built-in Kotlin understand.
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
 dependencies {
-    implementation "com.github.ppgco.android-sdk:sdk:3.2.0"
-    implementation "com.github.ppgco.android-sdk:inappmessages:3.2.0"
-    implementation 'com.google.firebase:firebase-messaging-ktx:24.1.2'
-    implementation platform('com.google.firebase:firebase-bom:33.16.0')
-    implementation "com.google.guava:guava:31.1-android"
+    implementation "com.github.ppgco.android-sdk:sdk:3.2.1"
+    implementation "com.github.ppgco.android-sdk:inappmessages:3.2.1"
+
+    implementation platform('com.google.firebase:firebase-bom:34.7.0')
+    implementation 'com.google.firebase:firebase-messaging'
+
+    // ListenableFuture, returned by the native SDK's createSubscriber() and the
+    // Live Activity subscribe/unsubscribe calls.
+    implementation "com.google.guava:guava:33.7.1-android"
 }

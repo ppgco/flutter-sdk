@@ -115,6 +115,10 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
       if (extras != null && (extras.containsKey(PPG_PUSH_CAMPAIGN_KEY) || extras.containsKey(PPG_PUSH_PROJECT_KEY))) {
         val notificationData = mutableMapOf<String, Any?>()
         for (key in extras.keySet()) {
+          // Bundle.get(String) is deprecated in favour of the typed getters, but
+          // the push payload's keys and their types are not known ahead of time —
+          // an untyped read is the only way to enumerate them.
+          @Suppress("DEPRECATION")
           val value = extras.get(key)
           // Only include serializable types (skip Bundle and other complex types)
           if (value is String || value is Number || value is Boolean) {
@@ -299,10 +303,14 @@ class PushpushgoSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Plug
           val customId = parsedJSON["customId"] as? String
           customId?.let { beacon.setCustomId(it) } ?: Log.w("PpgBeaconTranslate", "cannot parse custom id")
 
-          val assignToGroup = parsedJSON.optString("assignToGroup", null)
+          // optString(name, null) passes null into a parameter Java declares as
+          // non-null — it happens to work, but only because the platform method
+          // never checks. has() + the single-argument overload expresses the same
+          // "absent means skip" without relying on that.
+          val assignToGroup = if (parsedJSON.has("assignToGroup")) parsedJSON.optString("assignToGroup") else null
           assignToGroup?.let { beacon.assignToGroup(it) }
 
-          val unassignFromGroup = parsedJSON.optString("unassignFromGroup", null)
+          val unassignFromGroup = if (parsedJSON.has("unassignFromGroup")) parsedJSON.optString("unassignFromGroup") else null
           unassignFromGroup?.let { beacon.unassignFromGroup(it) }
 
           beacon.send()
