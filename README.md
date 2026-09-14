@@ -493,18 +493,22 @@ If you don't have custom application file:
 And create file called `MainApplication` with content:
 
 ```kotlin
-package ...;
+package ...
 
+import android.app.Application
 import com.pushpushgo.pushpushgo_sdk.PushPushGoHelpers
-import io.flutter.app.FlutterApplication
 
-class MainApplication: FlutterApplication() {
+class MainApplication : Application() {
     override fun onCreate() {
         PushPushGoHelpers.initialize(this)
         super.onCreate()
     }
 }
 ```
+
+> Older versions of this guide extended `io.flutter.app.FlutterApplication`. That
+> class is deprecated and no longer needed — a plain `android.app.Application`
+> works with the current Flutter embedding.
 
 Optional if you need deeplinkin add:
 

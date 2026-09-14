@@ -167,3 +167,5 @@ Update Android SDK to 3.0.2
 ### Internal
 - **CI publishes from Flutter 3.32.4 instead of 3.7.12** - The release workflow ran `flutter analyze` on an SDK from April 2023, so the gate never saw what integrators see.
 - **Example: fixed `example/pubspec.yaml` Dart constraint** - `<3.0.0` only resolved thanks to pub's leniency for pre-Dart-3 upper bounds; it now matches the plugin's own `<4.0.0`.
+- **Android: the Kotlin sources now compile without warnings** - `optString(name, null)` passed `null` into a parameter the platform declares non-null (it worked only because the method never checks); the beacon's `assignToGroup` / `unassignFromGroup` now use `has()` plus the single-argument overload, with identical behaviour. The untyped `Bundle.get(key)` used to enumerate a push payload is now explicitly suppressed and explained, rather than left as a bare deprecation.
+- **Example and README: `MainApplication` extends `android.app.Application`** - `io.flutter.app.FlutterApplication` is deprecated and no longer needed with the current Flutter embedding. The README's integration snippet told integrators to extend it, so every host app inherited the warning too.
