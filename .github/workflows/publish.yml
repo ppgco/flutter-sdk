@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -20,8 +20,12 @@ jobs:
         run: flutter analyze
       # - name: Run tests
       #   run: flutter test
-      - name: Format code
-        run: dart format --fix .
+      - name: Check formatting
+        # Verify rather than rewrite: this runs on the tagged commit, so
+        # reformatting here would publish something other than what was tagged.
+        # (`dart format --fix` was removed in Dart 3; `dart fix --apply` is the
+        # equivalent, and does not belong in a publish job either.)
+        run: dart format --output=none --set-exit-if-changed .
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
       - name: Publish
