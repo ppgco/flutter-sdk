@@ -36,6 +36,17 @@ Official PushPushGo SDK client for Flutter apps (iOS, Android)
 - Access to Apple Developers console
 - For iOS - Cocoapods (or other package manager)
 
+### Android build toolchain
+
+| | Minimum | Notes |
+|---|---|---|
+| Android Gradle Plugin | **8.2.2** | Required by the Kotlin Gradle plugin the SDK ships with. AGP 9.x is supported — the SDK applies KGP only when AGP's built-in Kotlin is not in use. |
+| Gradle | 8.13 | Gradle 9.1+ is needed to run on JDK 25. |
+| JDK | 17 | **Use JDK 17–24 with Gradle 8.x.** Android Studio 2026.1 bundles JDK 25, which Gradle only supports from 9.1.0 — on Gradle 8.x it fails with `Unsupported class file major version 69`. Either upgrade the Gradle wrapper or point Flutter at an older JDK with `flutter config --jdk-dir=...`. |
+| compileSdk | 36 | Your app may stay on a lower `compileSdk`; the SDK does not force an upgrade. |
+| minSdk | 26 | |
+| targetSdk | 36 | Required by Google Play for new apps and updates since 31 Aug 2026. |
+
 **Approximate time of integration (without further implementation): 2-3h.**
 
 **Before you start, make sure to remove all previous integrations with other providers.**
