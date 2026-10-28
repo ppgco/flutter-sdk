@@ -7,7 +7,7 @@ Dart, Android-native and iOS-native layers.
 The plugin is a thin bridge on top of:
 
 - **Android** — `com.pushpushgo:sdk` (see `android-sdk` repository, file
-  `DEEPLINKS.md` for the underlying behavior).
+  `library/DEEPLINKS.md` for the underlying behavior).
 - **iOS** — `PPG_framework` (see `ios-sdk` repository, file `DEEPLINKS.md`
   for the underlying behavior, AASA setup and `UL` flag).
 
@@ -213,7 +213,7 @@ bool tappedActionButton(Map<String, dynamic> data) {
 
 ## Android-side setup
 
-Same as for the native Android SDK (see `android-sdk/DEEPLINKS.md`):
+Same as for the native Android SDK (see `android-sdk/library/DEEPLINKS.md`):
 
 1. The launcher activity **must** be `android:launchMode="singleTop"`. The
    plugin registers `addOnNewIntentListener` for you, but Android only

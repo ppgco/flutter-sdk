@@ -1,0 +1,621 @@
+# PushPushGo Push Notifications - Flutter SDK
+
+This document describes how to integrate push notifications in your Flutter application (iOS, Android).
+
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Environment setup](#environment-setup)
+- [1. Add SDK to your existing application](#1-add-sdk-to-your-existing-application)
+- [2. iOS Support](#2-ios-support)
+- [3. Android Support](#3-android-support)
+- [4. Available Methods](#4-available-methods)
+
+## Requirements
+
+Supported platforms:
+- iOS
+- Android
+
+You will need:
+- PPG project
+- Access to Firebase Console
+- Access to Apple Developers console
+- For iOS - Cocoapods (or other package manager)
+
+### Android build toolchain
+
+| | Minimum | Notes |
+|---|---|---|
+| Android Gradle Plugin | **8.2.2** | Required by the Kotlin Gradle plugin the SDK ships with. AGP 9.x is supported — the SDK applies KGP only when AGP's built-in Kotlin is not in use. |
+| Gradle | 8.13 | Gradle 9.1+ is needed to run on JDK 25. |
+| JDK | 17 | **Use JDK 17–24 with Gradle 8.x.** Android Studio 2026.1 bundles JDK 25, which Gradle only supports from 9.1.0 — on Gradle 8.x it fails with `Unsupported class file major version 69`. Either upgrade the Gradle wrapper or point Flutter at an older JDK with `flutter config --jdk-dir=...`. |
+| compileSdk | 36 | Your app may stay on a lower `compileSdk`; the SDK does not force an upgrade. |
+| minSdk | 26 | |
+| targetSdk | 36 | Required by Google Play for new apps and updates since 31 Aug 2026. |
+
+**Approximate time of integration (without further implementation): 2-3h.**
+
+**Before you start, make sure to remove all previous integrations with other providers.**
+
+## Environment setup
+Make sure that you have flutter installed, and `flutter doctor` command pass.
+
+```bash
+$ flutter doctor
+```
+
+If pass without any exceptions you are ready to go through next steps
+
+## 1. Add SDK to your existing application
+### 1.1 Install flutter package
+```bash
+$ flutter pub add pushpushgo_sdk
+```
+
+### 1.2 Import library
+```dart
+import 'package:pushpushgo_sdk/pushpushgo_sdk.dart';
+```
+
+### 1.3 Initialize client
+
+Declare and initialize PPG client in your main application class:
+```dart
+    final pushpushgo = PushpushgoSdk({
+        "apiToken": "my-api-key-from-pushpushgo-app", 
+        "projectId": "my-project-id-from-pushpushgo-app",
+        // required from v1.0.0+
+        // AppGroup can be received/created in Xcode -> Target Runner -> Signing&Capabilities
+        "appGroupId": "your-app-group-id-from-provisioning-profile"
+    });
+    
+    await pushpushgo.initialize(
+      onNewSubscriptionHandler: (subscriberId) {
+        print("Subscriber ID: $subscriberId");
+      },
+      // Optional: Handle notification clicks in Flutter
+      onNotificationClickedHandler: (notificationData) {
+        print("Notification clicked: $notificationData");
+        // The payload shape differs between Android and iOS - see section 1.4
+        final link = getNotificationLink(notificationData);
+        if (link != null) {
+          // Handle deep linking or navigation
+        }
+      },
+      // Set to false to prevent automatic URL opening on notification click
+      // Use this when you want to handle links manually in onNotificationClickedHandler
+      handleNotificationLink: true,  // default: true
+    );
+```
+
+Then fill `apiToken` and `projectId` with your PushPushGo project credentials - see [Credentials](README.md#credentials).
+
+### 1.4 Notification Click Handler (Optional)
+
+You can intercept notification clicks and handle them in your Flutter code:
+
+```dart
+await pushpushgo.initialize(
+  onNewSubscriptionHandler: (subscriberId) {
+    print(subscriberId);
+  },
+  onNotificationClickedHandler: (notificationData) {
+    print("Notification data: $notificationData");
+
+    // Example: Navigate to specific screen based on the click URL
+    final link = getNotificationLink(notificationData);
+    if (link == 'https://example.com/promo') {
+      Navigator.pushNamed(context, '/promo');
+    }
+  },
+  // When false, SDK won't open URLs automatically
+  // You handle navigation in onNotificationClickedHandler
+  handleNotificationLink: false,
+);
+```
+
+**The payload shape differs between platforms:**
+
+- **Android** delivers a flat map with convenience keys such as `link`,
+  `redirectLink`, `campaign`, `project` plus any custom data fields.
+- **iOS** passes the raw APNs payload through (plus `actionIdentifier`,
+  `title`, `body` added by the plugin). There is **no flat `link` key on
+  iOS** - the click URL is nested in `aps` → `url-args` (first element) for
+  a notification-body tap, or in `actions[index]['url']` for action-button
+  taps (`button_1` → index 0, `button_2` → index 1).
+
+Use this platform-aware helper to read the click URL on both platforms:
+
+```dart
+String? getNotificationLink(Map<String, dynamic> data) {
+  // iOS: action-button tap - URL is per-button in `actions`, key is `url`
+  final actionId = data['actionIdentifier']?.toString();
+  final actions = data['actions'];
+  if (actions is List && (actionId == 'button_1' || actionId == 'button_2')) {
+    final index = actionId == 'button_1' ? 0 : 1;
+    if (index < actions.length && actions[index] is Map) {
+      final url = (actions[index] as Map)['url']?.toString();
+      if (url != null && url.isNotEmpty) return url;
+    }
+  }
+
+  // iOS: default notification-body tap - first element of aps["url-args"]
+  // Note: nested values arrive from the platform channel as
+  // Map<Object?, Object?> / List<Object?>, so use untyped `is Map` /
+  // `is List` checks - strict generic casts like `as Map<String, dynamic>`
+  // will fail.
+  final aps = data['aps'];
+  if (aps is Map) {
+    final urlArgs = aps['url-args'];
+    if (urlArgs is List && urlArgs.isNotEmpty) {
+      final first = urlArgs.first?.toString();
+      if (first != null && first.isNotEmpty) return first;
+    }
+  }
+
+  // Android: flat convenience keys
+  final link = (data['redirectLink'] ?? data['link'])?.toString();
+  if (link != null && link.trim().isNotEmpty) return link.trim();
+
+  return null;
+}
+```
+
+For the full payload reference and deep-link setup (custom URL schemes,
+Universal Links, AASA), see [DEEPLINKS.md](DEEPLINKS.md).
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `onNewSubscriptionHandler` | `Function(String)` | required | Called when subscriber is registered |
+| `onNotificationClickedHandler` | `Function(Map<String, dynamic>)?` | null | Called when user taps a notification |
+| `handleNotificationLink` | `bool` | true | If true, SDK opens notification URL automatically. Set to false to handle links manually |
+| `isProduction` | `bool` | true | Use production API (false for staging) |
+| `isDebug` | `bool` | false | Enable debug logging |
+
+**Note: If you want to see example of integration on test app visit:** https://github.com/ppgco/flutter-example-integration
+
+
+## 2. iOS Support
+
+> **IMPORTANT: SPM Support Added!**
+>
+> As of version 1.2.0, this SDK supports both CocoaPods and Swift Package Manager (SPM) for iOS integration. Existing users can continue using CocoaPods, while new users are encouraged to try SPM for a simpler setup. See below for both options.
+
+### 2.1 Option 1: Integrate via CocoaPods (Legacy, Still Supported)
+
+**Make sure your minimum deployment platform version is at least 14.0**
+
+Add to `target 'Runner' do` at the end of the declaration:
+```pod
+  pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.4.0'
+  pod 'PPG_InAppMessages', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.4.0'
+```
+
+**Both lines are required**, even if you only use push notifications — the
+plugin depends on both modules. The 4.x native SDK is served from GitHub rather
+than the CocoaPods trunk, so the `:git`/`:tag` source is what makes the right
+version resolvable; without it `pod install` stops with
+`None of your spec sources contain a spec satisfying the dependency`.
+
+Live Activities need a third pod — see the
+[Live Activities Guide](LIVE_ACTIVITIES.md#cocoapods).
+
+After that, in terminal, navigate to yourFlutterProject/ios/ and run:
+```bash
+$ pod install
+```
+
+### 2.2 Option 2: Integrate via Swift Package Manager (Recommended)
+
+1. **Enable SPM support in your Flutter SDK (requires Flutter 3.24+):**
+   ```bash
+   flutter config --enable-swift-package-manager
+   ```
+2. **Open your iOS project in Xcode:**
+   ```bash
+   xed ios/
+   ```
+3. **Add the PushPushGo iOS SDK as a Swift Package:**
+   - In Xcode, go to `File > Add Packages...`
+   - Enter the SDK repo URL: `https://github.com/ppgco/ios-sdk.git`
+   - Select the version and add it to your app target (and Notification Service Extension if needed)
+
+---
+
+**Note:**
+- Both methods are supported. SPM is recommended for new projects or if you want to avoid CocoaPods.
+- If you migrate from CocoaPods to SPM, you can safely remove the Podfile and Pods directory after verifying SPM integration works.
+- If you encounter issues, ensure your Flutter version is up to date and SPM is enabled with `flutter config --enable-swift-package-manager`.
+
+### 2.3 Continue with Xcode Setup
+
+#### 2.3.1 Enable Push Notification Capabilities in Project Target
+1. Select your root item in files tree called "**your_project_name**" with blue icon and select **your_project_name** in **Target** section.
+2. Go to Signing & Capabilities tab and click on "**+ Capability**" under tabs.
+3. Select **Push Notifications**, **Background Modes** and **AppGroups (from v1.0.0+)**
+4. On **Background Modes** select items:
+ - Remote notifications
+ - Background fetch
+
+#### 2.3.2 Add Notification Service Extension (NSE) Support
+
+##### 1. Create the NSE Target
+
+1. In Xcode, go to **File > New > Target…**
+2. Choose **Notification Service Extension** and give it a name (e.g., `NSE`).
+3. When prompted, click **Cancel** on "Activate scheme?".
+4. Open the generated `NotificationService.swift` and edit it:
+
+```swift
+    import UserNotifications
+    import PPG_framework
+
+    class NotificationService: UNNotificationServiceExtension {
+
+        var contentHandler: ((UNNotificationContent) -> Void)?
+        var bestAttemptContent: UNMutableNotificationContent?
+
+        override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+            self.contentHandler = contentHandler
+            self.bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
+
+            guard let content = bestAttemptContent else { return }
+
+            // Wait for delivery event result & image fetch before returning from extension
+            let group = DispatchGroup()
+            group.enter()
+            group.enter()
+
+            // Fill your app group id
+            SharedData.shared.appGroupId = "YOUR APP GROUP ID" 
+
+            PPG.notificationDelivered(notificationRequest: request) { _ in
+                group.leave()
+            }
+
+            DispatchQueue.global().async { [weak self] in
+                self?.bestAttemptContent = PPG.modifyNotification(content)
+                group.leave()
+            }
+
+            group.notify(queue: .main) {
+                contentHandler(self.bestAttemptContent ?? content)
+            }
+        }
+
+        override func serviceExtensionTimeWillExpire() {
+            // Called just before the extension will be terminated by the system.
+            // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push payload will be used.
+            if let contentHandler = contentHandler, let bestAttemptContent =  bestAttemptContent {
+                contentHandler(bestAttemptContent)
+            }
+        }
+
+    }
+```
+
+##### 2. Link PPG_framework to NSE Target
+
+**A. If using Swift Package Manager (SPM):**
+- In Xcode, select the NSE target.
+- Go to the **General** tab.
+- In **Frameworks, Libraries, and Embedded Content**, click **+**.
+- Add **PPG_framework** (from the SPM section).
+- Make sure it is set to "Embed & Sign" if required.
+
+**B. If using CocoaPods:**
+- In your `Podfile`, add:
+  ```ruby
+  target 'NSE' do
+    use_frameworks!
+    use_modular_headers!
+    pod 'PPG_framework', :git => 'https://github.com/ppgco/ios-sdk.git', :tag => '4.4.0'
+  end
+  ```
+- Run:
+  ```bash
+  cd ios
+  pod install
+  ```
+
+##### 3. Additional Notes
+- The NSE target must always have `PPG_framework` linked, regardless of package manager.
+- If you use SPM for the main app, use SPM for NSE for consistency.
+- If you use CocoaPods for the main app, use CocoaPods for NSE.
+- If you encounter linker errors, double-check that `PPG_framework` is visible in the NSE target's "Linked Frameworks and Libraries" section in Xcode.
+
+---
+
+(optional) In `Info.plist` add following to enable deep linking in flutter
+```xml
+<key>FlutterDeepLinkingEnabled</key>
+<true/>
+```
+
+### 2.4 Prepare certificates
+
+ 1. Go to [Apple Developer Portal - Identities](https://developer.apple.com/account/resources/identifiers/list) and go to **Identifiers** section
+ 2. Select from list your appBundleId like `com.example.your_project_name`
+ 3. Look for PushNotifications and click "**Configure**" button
+ 4. Select your __Certificate Signing Request__ file
+ 5. Download Certificates and open in KeyChain Access (double click in macos)
+ 6. Find this certificate in list select then in context menu (right click) select export and export to .p12 format file with password.
+ 7. Login into app and add this `Certificate.p12` file with password via UI (https://next.pushpushgo.com/projects/YourProjectID/settings/integration/apns)
+ 
+ For manual certificate generation visit our tutorial - https://docs.pushpushgo.company/application/providers/mobile-push/apns
+
+## 3. Android Support
+
+### 3.1 Firebase CLI
+1. Install Firebase CLI - open terminal and run command:
+    ```bash
+    $ curl -sL https://firebase.tools | bash
+    ```
+2. Install FlutterFire CLI - open terminal and run command:
+    ```bash
+   $ dart pub global activate flutterfire_cli
+    ```
+3. In terminal login to firebase:
+    ```bash
+   $ firebase login
+    ```
+4. Navigate to root of your Flutter project and run:
+    ```bash
+   $ flutterfire configure --project=your-firebase-project-id
+    ```
+   Follow instructions provided in terminal.
+
+   Note: If you cant use flutterfire command, add **export PATH="$PATH":"$HOME/.pub-cache/bin"** to your .zshrc file.
+
+### 3.2 Add code to your root build.gradle (/android/build.gradle)
+
+Add jitpack and huawei repo
+```groovy
+// build.gradle (root) or settings.gradle (dependencyResolutionManagement)
+allprojects {
+    repositories {
+        // jitpack
+        maven { url 'https://jitpack.io' }
+        // only when use hms
+        maven { url 'https://developer.huawei.com/repo/' }
+    }
+}
+```
+
+For HMS add:
+```groovy
+dependencies {
+    classpath 'com.huawei.agconnect:agcp:1.6.0.300'
+}
+```
+
+**WARNING: If you will face packagename errors from pushpushgo_sdk add this code:**
+```groovy
+subprojects { subproject ->
+    if (subproject.name == "pushpushgo_sdk") {
+        subproject.afterEvaluate {
+            subproject.android {
+                namespace 'com.pushpushgo.pushpushgo_sdk'
+            }
+        }
+    }
+}
+```
+
+### 3.3 Add to your `AndroidManifest.xml`
+
+This file is placed in `android/app/src/main/`
+
+#### 3.3.1 (Recommended) Add SDK meta-data to prevent cold-start crashes
+
+To prevent crashes when FCM sends `onNewToken()` before Flutter SDK initialization, add meta-data configuration:
+
+```xml
+<application ...>
+    <!-- PushPushGo SDK Configuration (prevents cold-start crash) -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.projectId" 
+        android:value="YOUR_PROJECT_ID" />
+    <meta-data 
+        android:name="com.pushpushgo.sdk.apiKey" 
+        android:value="YOUR_API_KEY" />
+    <!-- Optional: set to false for staging environment -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.isProduction" 
+        android:value="true" />
+    <!-- Optional: set to true for debug environment -->
+    <meta-data 
+        android:name="com.pushpushgo.sdk.isDebug" 
+        android:value="false" />
+    <!-- ... rest of your application -->
+</application>
+```
+
+> **Note:** Without this meta-data, on first app install the SDK might crash with `PushPushException: You have to initialize PushPushGo with context first!` if FCM triggers before Flutter initialization completes.
+
+#### 3.3.2 Activities (on main activity level)
+
+```xml
+    <intent-filter>
+        <action android:name="APP_PUSH_CLICK" />
+        <category android:name="android.intent.category.DEFAULT" />
+    </intent-filter>
+```
+
+If you don't have custom application file:
+
+#### 3.3.3 Add to your `<application>` tag:
+```xml
+    <application
+        android:name=".MainApplication" 
+        ...>
+```
+
+And create file called `MainApplication` with content:
+
+```kotlin
+package ...
+
+import android.app.Application
+import com.pushpushgo.pushpushgo_sdk.PushPushGoHelpers
+
+class MainApplication : Application() {
+    override fun onCreate() {
+        PushPushGoHelpers.initialize(this)
+        super.onCreate()
+    }
+}
+```
+
+> Older versions of this guide extended `io.flutter.app.FlutterApplication`. That
+> class is deprecated and no longer needed — a plain `android.app.Application`
+> works with the current Flutter embedding.
+
+Optional if you need deeplinking add:
+
+```xml
+    <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
+```
+
+### 3.4 Add logic to your `MainActivity`
+
+```kotlin
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
+import com.pushpushgo.pushpushgo_sdk.PushPushGoHelpers
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private fun requestNotificationsPermission() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf<String>(Manifest.permission.POST_NOTIFICATIONS),
+                0
+            )
+        }
+    }
+
+   override fun onCreate(savedInstanceState: Bundle?) {
+       super.onCreate(savedInstanceState)
+
+       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+           requestNotificationsPermission();
+       }
+
+       PushPushGoHelpers.onCreate(this.application, intent, savedInstanceState)
+   }
+
+    override fun onNewIntent(intent: Intent) {
+       PushPushGoHelpers.onNewIntent(this.application, intent)
+    }
+
+}
+```
+
+### 3.5 Modify build.gradle:
+
+Add dependencies in build.gradle (app level)
+
+#### 3.5.1 For FCM
+```groovy
+// build.gradle (:app)
+dependencies {  
+    ...  
+    implementation "com.github.ppgco.android-sdk:sdk:3.2.0"
+    implementation platform('com.google.firebase:firebase-bom:33.16.0')
+    implementation 'com.google.firebase:firebase-messaging'
+}
+```
+
+#### 3.5.2 For HMS
+
+```groovy
+dependencies {
+  ...
+    implementation "com.github.ppgco.android-sdk:sdk:3.2.0"
+    implementation 'com.huawei.agconnect:agconnect-core:1.7.0.300'
+    implementation 'com.huawei.hms:push:6.5.0.300'  
+}
+```
+
+On top add:
+Paste this below `com.android.library`
+```groovy
+    id 'com.huawei.agconnect'
+```
+
+### 3.6 Generate FCM v1 credentials and upload it in PPG APP:
+   * Go to your Firebase console and navigate to project settings
+   * Open Cloud Messaging tab
+   * Click Manage Service Accounts
+   * Click on your service account email
+   * Navigate to KEYS tab
+   * Click ADD KEY
+   * Click CREATE NEW KEY
+   * Pick JSON type and click create
+   * Download file and upload it in PushPushGo Application (https://next.pushpushgo.com/projects/YourProjectID/settings/integration/fcm)
+
+## 4. Available Methods
+
+```dart
+    // Subscribe for notifications
+    _pushpushgo.registerForNotifications();
+
+    // Unsubscribe from notifications
+    _pushpushgo.unregisterFromNotifications();
+
+    // Get subscriber id
+    _pushpushgo.getSubscriberId();
+
+    // Send beacons for subscriber
+    _pushpushgo.sendBeacon(
+        Beacon(
+            tags: {
+                Tag.fromString("my:tag"),
+                Tag(
+                    key: "myaa",
+                    value: "aaaa",
+                    strategy: "append",
+                    ttl: 1000)
+            },
+            tagsToDelete: {},
+            customId: "my_id",
+            selectors: {"my": "data"}
+        )
+    );
+
+    // Dynamic Groups (Segments) - assign subscriber to a group
+    _pushpushgo.sendBeacon(
+        Beacon(
+            tags: {},
+            tagsToDelete: {},
+            customId: "my_id",
+            selectors: {},
+            assignToGroup: "premium-users"  // groupId
+        )
+    );
+
+    // Dynamic Groups (Segments) - unassign subscriber from a group
+    _pushpushgo.sendBeacon(
+        Beacon(
+            tags: {},
+            tagsToDelete: {},
+            customId: "my_id",
+            selectors: {},
+            unassignFromGroup: "trial-users"  // groupId
+        )
+    );
+```
