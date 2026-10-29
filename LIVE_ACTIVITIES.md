@@ -25,7 +25,7 @@ On unsupported devices every method is safe to call and does nothing — always
 gate your UI on `isSupported()`.
 
 Both platforms additionally require that push notifications already work
-(see the main [README](README.md)) and that the device is a registered
+(see [Push Notifications](PUSH_NOTIFICATIONS.md)) and that the device is a registered
 subscriber.
 
 ## How it works
